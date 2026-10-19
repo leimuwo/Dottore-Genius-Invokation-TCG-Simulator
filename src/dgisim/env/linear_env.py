@@ -107,7 +107,7 @@ class LinearEnv:
             case _:
                 turn = 2
                 perspective_state = self._curr_state.perspective_view(Pid.P2)
-                perspective = Pid.P2 if self._fix_perspective else Pid.P1
+                perspective = Pid.P2
         return (
             perspective_state,
             self._encoding_plan.encode(perspective_state, perspective),
@@ -204,14 +204,20 @@ class LinearEnv:
         )
 
     def copy(self) -> Self:
-        new_self = type(self)(
-            mode=self._mode,
-            encoding_plan=self._encoding_plan,
-            reward_method=self._reward_method,
-            invalid_action_penalty=self._invalid_action_penalty,
-        )
+        """
+        :returns: a copy of this env sharing the same current state.
+
+        Must NOT go through `__init__`: `__init__` ends with `reset()`, which
+        initializes a whole new random game and advances the global RNG.
+        """
+        new_self = object.__new__(type(self))
+        new_self._mode = self._mode
+        new_self._encoding_plan = self._encoding_plan
+        new_self._reward_method = self._reward_method
+        new_self._invalid_action_penalty = self._invalid_action_penalty
         new_self._last_deck1 = self._last_deck1
         new_self._last_deck2 = self._last_deck2
         new_self._curr_state = self._curr_state
         new_self._last_reset = self._last_reset
+        new_self._fix_perspective = self._fix_perspective
         return new_self
