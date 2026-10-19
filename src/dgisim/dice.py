@@ -172,7 +172,7 @@ class Dice:
 
     @cached_property
     def ordered_dice(self) -> tuple[Element, ...]:
-        return Counter(self._dice).elements()  # type: ignore
+        return tuple(Counter(self._dice).elements())  # type: ignore
 
     def encoding(self, encoding_plan: EncodingPlan) -> list[int]:
         """
