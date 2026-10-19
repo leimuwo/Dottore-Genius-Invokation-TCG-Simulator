@@ -184,7 +184,7 @@ class Cards:
         """
         :returns: the encoding of this `Cards` object.
         """
-        ret_val = [encoding_plan.encode_item(card) for card in self.ordered_cards]
+        ret_val = sorted(encoding_plan.encode_item(card) for card in self.ordered_cards)
         fillings = encoding_plan.CARDS_FIXED_LEN - len(ret_val)
         if fillings < 0:
             raise Exception(f"Too many cards: {len(self._cards)}")

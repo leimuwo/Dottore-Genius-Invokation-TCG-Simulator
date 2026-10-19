@@ -178,10 +178,10 @@ class Dice:
         """
         :returns: the encoding of this Dice.
         """
-        ret_val: list[int] = [
+        ret_val: list[int] = sorted(
             encoding_plan.encode_item(elem)
             for elem in self.ordered_dice
-        ]
+        )
         fillings = encoding_plan.DICE_FIXED_LEN - len(ret_val)
         if fillings < 0:
             raise Exception(f"Too many dice: {self.num_dice()}")
