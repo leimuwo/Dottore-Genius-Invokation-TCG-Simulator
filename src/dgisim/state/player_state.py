@@ -228,6 +228,15 @@ class PlayerState:
                     supports = supports.update_support(support.perspective_view(), override=True)
             return supports
 
+        def hide_initial_deck(deck: Deck) -> Deck:
+            from ..card.card import OmniCard
+            from ..deck import FrozenDeck
+            from ..helper.hashable_dict import HashableDict
+            return FrozenDeck(
+                chars=tuple(deck.chars),
+                cards=HashableDict({OmniCard: sum(deck.cards.values())}),
+            )
+
         return self.factory().f_hand_cards(
             lambda hcs: hcs.hide_all()
         ).f_deck_cards(
@@ -236,6 +245,8 @@ class PlayerState:
             lambda d: d.hide_all()
         ).f_supports(
             hide_support
+        ).f_initial_deck(
+            hide_initial_deck
         ).build()
 
     def encoding(self, encoding_plan: EncodingPlan) -> list[int]:
