@@ -30,6 +30,7 @@ class LinearEnv:
             reward_method: Callable[[GameState], int | float] = real_reward,
             invalid_action_penalty: int | float = -0.1,
             fix_perspective: bool = False,
+            strict_error: bool = False,
     ):
         """
         :param mode: the mode of the game.
@@ -38,6 +39,8 @@ class LinearEnv:
         :param invalid_action_penalty: the penalty for invalid action.
         :param fix_perspective: if True, always present active character as P1 with fixed positions.
                                 (this affect only the encoded state)
+        :param strict_error: if True, illegal actions raise instead of being turned into a
+                             penalty. `last_error` is always recorded either way.
         """
         self._mode = mode
         self._encoding_plan = encoding_plan
@@ -48,6 +51,8 @@ class LinearEnv:
         self._curr_state: GameState
         self._last_reset: Callable[[], None] = self._reset_random
         self._fix_perspective = fix_perspective
+        self._strict_error = strict_error
+        self._last_error: None | str = None
         self.reset()
 
     def fix_perspective(self, fix_persepctive: bool) -> None:
@@ -145,6 +150,9 @@ class LinearEnv:
         if isinstance(action, list):
             optional_action = PlayerAction.decoding(action, self._encoding_plan)
             if optional_action is None:
+                self._last_error = "InvalidActionDecoding"
+                if self._strict_error:
+                    raise ValueError("action cannot be decoded")
                 perspective_state = self._curr_state.perspective_view(
                     Pid(turn)
                 )
@@ -167,6 +175,11 @@ class LinearEnv:
         try:
             state = self._curr_state.action_step(curr_player, action)
         except Exception as e:
+            # 静默吞异常是 M1 的已知坑：这里仍然降级为罚分，但必须留下痕迹，
+            # 且 strict_error=True 时直接抛出，让上层能计数/中断。
+            self._last_error = f"{type(e).__name__}: {e}".splitlines()[0][:200]
+            if self._strict_error:
+                raise
             perspective_state = self._curr_state.perspective_view(Pid(turn))
             return (
                 perspective_state,
@@ -183,6 +196,7 @@ class LinearEnv:
         while state.waiting_for() is None and not state.game_end():
             state = state.step()
         self._curr_state = state
+        self._last_error = None
 
         match self._curr_state.waiting_for():
             case None:
@@ -220,4 +234,11 @@ class LinearEnv:
         new_self._curr_state = self._curr_state
         new_self._last_reset = self._last_reset
         new_self._fix_perspective = self._fix_perspective
+        new_self._strict_error = self._strict_error
+        new_self._last_error = self._last_error
         return new_self
+
+    @property
+    def last_error(self) -> None | str:
+        """最近一次 `step()` 是否走了非法分支；None 表示上一次是正常决策。"""
+        return self._last_error
