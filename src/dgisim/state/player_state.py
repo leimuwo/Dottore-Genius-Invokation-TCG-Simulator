@@ -274,7 +274,7 @@ class PlayerState:
         cards = mode.all_cards()
         chars = mode.all_chars()
         import random
-        selected_chars = random.sample(list(chars), k=3)
+        selected_chars = random.sample(sorted(chars, key=lambda c: c.__name__), k=3)
         deck = MutableDeck(chars=selected_chars, cards={})
         cards_pool: list[type[Card]] = []
         for card in cards:
@@ -284,6 +284,7 @@ class PlayerState:
                 cards_pool.append(card)
             else:
                 cards_pool.extend([card] * 2)
+        cards_pool.sort(key=lambda c: c.__name__)
         selected_cards = random.sample(cards_pool, k=mode.deck_cards_requirement())
         deck.cards = Counter(selected_cards)
         return cls(
