@@ -365,9 +365,7 @@ class ActionPhase(ph.Phase):
                 or dice[action.dice_elem] == 0 \
                 or action.dice_elem is active_character_elem \
                 or dice[Element.OMNI] + dice[active_character_elem] == dice.num_dice():
-            print(f"{action} cannot be performed in game state:\n{game_state}")
-            assert False
-            return None
+            raise ValueError(f"{action} cannot be performed in game state")
         effects: list[Effect] = [
             AllStatusTriggererEffect(
                 pid,

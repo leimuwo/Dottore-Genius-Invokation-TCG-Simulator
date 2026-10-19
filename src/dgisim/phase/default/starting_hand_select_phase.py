@@ -64,8 +64,8 @@ class StartingHandSelectPhase(ph.Phase):
         swap_action: CharacterSelectAction = action
         char_id = swap_action.char_id
         chars = game_state.get_player(pid).characters
-        if not chars.char_id_valid(char_id):  # pragma: no cover
-            return game_state
+        if not chars.char_id_valid(char_id):
+            raise ValueError(f"invalid char_id {char_id} for {pid}")
         return game_state.factory().active_player_id(
             pid.other
         ).f_player(
