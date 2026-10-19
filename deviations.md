@@ -23,8 +23,16 @@
 
 | ID | 内容 | 开关 | 状态 |
 |---|---|---|---|
-| D2 | 15 回合耗尽 → **双方都判负**（各自 −1），不做"存活角色/血量"代偿判定 | `ForkMode.timeout_penalty` | open |
-| D5 | 下回合先手 = **先结束回合的一方**（现状相反，实测 528/528） | `ForkMode.first_to_end_gets_initiative` | open |
+| D2 | 15 回合耗尽 → **双方都判负**（各自 −1），不做"存活角色/血量"代偿判定 | `ForkMode.timeout_penalty` | 已实现（`dgisim_ext/payoff.py` + `test_ext_contract.py`） |
+
+## 复核结论：D5 先手权——**归档版实现是正确的，不是偏差**
+
+`dgisim-RL环境评估.md` 曾记录"下回合先手权反了（528/528）"。复核结论：**该结论来自测量错误**。
+
+- 错误原因：`EndRoundAction` 在不同阶段含义不同——`CardSelectPhase` 是"放弃换牌"、`RollPhase` 是"不保留骰子"、只有 `ActionPhase` 才是"结束回合"。原探针把前两者也算成了"结束回合"，于是"先结束者"被记成了后一次换牌/换骰的人。
+- 正确测量（`analysis/probe_initiative.py`）：**133/133 个回合**，下回合 ActionPhase 的第一个行动者 == 本回合先声明结束的人。
+- 因此：**不需要任何规则修正**，也不再保留 `first_to_end_gets_initiative` 开关（曾经的契约位已删除）。
+- 行为已用 `src/tests/test_invariant_initiative.py` 锁定，防止以后有人"照着旧文档去修"从而把正确实现改坏。
 
 ## 记录规则
 

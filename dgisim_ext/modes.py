@@ -15,18 +15,16 @@ class ForkMode(DefaultMode):
 
     #: B4：15 回合耗尽 → 双方都判负，各自拿这个值。
     _TIMEOUT_PENALTY: float = -1.0
-    #: D5：下回合先手 = 先结束回合的一方（契约位；引擎侧尚未接线）。
-    _FIRST_TO_END_GETS_INITIATIVE: bool = True
 
     def timeout_penalty(self) -> float:
         return self._TIMEOUT_PENALTY
 
-    def first_to_end_gets_initiative(self) -> bool:
-        return self._FIRST_TO_END_GETS_INITIATIVE
-
 
 class UpstreamCompatMode(ForkMode):
-    """归档版行为：平局算 0，先手权保持归档版实现。用于消融与复现。"""
+    """归档版行为：平局算 0。用于消融与复现。
+
+    注：先手权（B5）经复核**归档版实现本来就是对的**（133/133 回合），
+    因此这里没有对应的开关——那条"偏差"是评测时的测量错误。
+    """
 
     _TIMEOUT_PENALTY = 0.0
-    _FIRST_TO_END_GETS_INITIATIVE = False

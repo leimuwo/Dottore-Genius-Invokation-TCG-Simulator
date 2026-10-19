@@ -12,14 +12,10 @@ from dgisim_ext.step_guard import step_checked
 
 class TestExtModes(unittest.TestCase):
     def test_fork_mode_defaults(self):
-        mode = ForkMode()
-        self.assertEqual(mode.timeout_penalty(), -1.0)
-        self.assertTrue(mode.first_to_end_gets_initiative())
+        self.assertEqual(ForkMode().timeout_penalty(), -1.0)
 
     def test_upstream_compat_mode(self):
-        mode = UpstreamCompatMode()
-        self.assertEqual(mode.timeout_penalty(), 0.0)
-        self.assertFalse(mode.first_to_end_gets_initiative())
+        self.assertEqual(UpstreamCompatMode().timeout_penalty(), 0.0)
 
 
 class TestPayoffMatrix(unittest.TestCase):

@@ -15,3 +15,6 @@ tokens.md
 *.swp
 *.prof
 *.egg-info
+
+# 验收门禁的运行期预算账本
+.verify_budget.json

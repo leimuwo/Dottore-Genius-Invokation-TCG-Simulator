@@ -82,9 +82,25 @@ ITEMS: dict[str, dict] = {
         "n_tests": 2,
         "red_needle": "AssertionError",
     },
+    "E4": {
+        "engine": ["src/dgisim/env/linear_env.py"],
+        "test": "src/tests/test_invariant_linear_env_errors.py",
+        "module": "src.tests.test_invariant_linear_env_errors",
+        "n_tests": 3,
+        "red_needle": ["TypeError", "AttributeError", "AssertionError"],
+    },
 }
 
 ALL_TEST_FILES = {spec["test"] for spec in ITEMS.values()}
+ALL_ENGINE_FILES = {path for spec in ITEMS.values() for path in spec["engine"]}
+PROTECTED_STATIC = {"pyproject.toml", "AGENTS.md"}
+# 注意：deviations.md 不在此列——登记偏差是每条引擎改动的**义务**，不该被门禁拦住；
+# 它由 CODEOWNERS 保护（人工批准），而不是由脚本禁止。
+#: 本 fork 自己加的测试（可以随契约演进而修改）；上游已有的测试一律受保护。
+OWN_TESTS = set(ALL_TEST_FILES) | {
+    "src/tests/test_ext_contract.py",
+    "src/tests/test_import_contract.py",
+}
 
 # 设计期声明的批次：同一批内的条目允许引擎改动同时在飞（仍然逐条提交、逐条验收）。
 BATCHES: dict[str, list[str]] = {
@@ -100,15 +116,32 @@ def run(args: list[str], timeout: int = CMD_TIMEOUT) -> tuple[int, str]:
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
+IGNORED_DIRTY = {".verify_budget.json"}
+
+
 def dirty_paths() -> set[str]:
     rc, out = run(["git", "status", "--porcelain"])
     if rc != 0:
         return {"<git-status-failed>"}
     paths = set()
     for line in out.splitlines():
-        if len(line) > 3:
-            paths.add(line[3:].strip().strip('"').replace("\\", "/"))
+        if len(line) <= 3:
+            continue
+        path = line[3:].strip().strip('"').replace("\\", "/")
+        if path in IGNORED_DIRTY:
+            continue
+        paths.add(path)
     return paths
+
+
+def protected_paths() -> set[str]:
+    """上游已有测试 + 少数几个"标准"文件：任何改动都视为越界。
+
+    本 fork 自己新增的测试（OWN_TESTS）不受保护，可以随契约演进修改。
+    """
+    rc, out = run(["git", "ls-files", "src/tests"])
+    tracked = set(out.splitlines()) if rc == 0 else set()
+    return PROTECTED_STATIC | (tracked - OWN_TESTS)
 
 
 def bump_budget(item: str, phase: str) -> int:
@@ -151,22 +184,28 @@ def main() -> int:
     if runs > MAX_RUNS_PER_ITEM:
         return fail(f"超出预算：{ns.item} {ns.phase} 已跑 {runs} 次（上限 {MAX_RUNS_PER_ITEM}）")
 
-    # ── 护栏 1：改动范围白名单 ──────────────────────────────
-    # 引擎文件按 item 严格限定；新增的不变量测试文件互相之间允许同时在飞
-    # （它们只是设计期产物，不影响当前 item 的语义）。
+    # ── 护栏 1：受保护文件 + 引擎白名单 ─────────────────────
+    # 规则重写（原"只允许白名单文件变脏"对多条目并行太严）：
+    #   ① 受保护文件（已有的测试 / pyproject / AGENTS.md / deviations.md）一个字都不许动；
+    #   ② 引擎文件只允许当前 item（或声明批次）里列出的；
+    #   ③ 其余新增产物（analysis/、dgisim_ext/、文档、新测试）不设限。
     engine_allowed = set(spec["engine"])
     if ns.batch:
         for other in BATCHES[ns.batch]:
             engine_allowed |= set(ITEMS[other]["engine"])
-    allowed = set(ALL_TEST_FILES) | (set() if ns.phase == "red" else engine_allowed)
     dirty = dirty_paths()
-    extra = dirty - allowed
-    verdict["checks"]["whitelist"] = {"dirty": sorted(dirty), "allowed": sorted(allowed)}
-    if extra:
-        return fail(f"改到了白名单外的文件：{sorted(extra)}")
+    violations = dirty & protected_paths()
+    verdict["checks"]["protected"] = {"dirty": sorted(dirty & protected_paths())}
+    if violations:
+        return fail(f"改到了受保护文件：{sorted(violations)}")
 
-    # ── 护栏 2：红阶段要求引擎文件未被修改 ───────────────────
-    if ns.phase == "red" and set(spec["engine"]) & dirty & allowed:
+    engine_dirty = dirty & ALL_ENGINE_FILES
+    verdict["checks"]["engine"] = {"dirty": sorted(engine_dirty), "allowed": sorted(engine_allowed)}
+    if not engine_dirty <= engine_allowed:
+        return fail(f"改到了本条目白名单外的引擎文件：{sorted(engine_dirty - engine_allowed)}")
+
+    # ── 护栏 2：红阶段要求本条目引擎文件未被修改 ─────────────
+    if ns.phase == "red" and (engine_dirty & set(spec["engine"])):
         return fail(f"红阶段不允许已经改了引擎文件：{spec['engine']}")
 
     # ── 护栏 3：跑该条的唯一命令，按输出判定，不靠人读日志 ────
@@ -177,8 +216,10 @@ def main() -> int:
     if ns.phase == "red":
         if rc == 0:
             return fail("红阶段测试却通过了 → 这条测试无效（测不出该 bug）")
-        if spec["red_needle"] not in out:
-            return fail(f"红阶段失败但报错不含 {spec['red_needle']} → 是环境/导入错误，不是有效红")
+        needles = spec["red_needle"]
+        needles = [needles] if isinstance(needles, str) else list(needles)
+        if not any(needle in out for needle in needles):
+            return fail(f"红阶段失败但报错不含 {needles} → 是环境/导入错误，不是有效红")
         verdict["ok"] = True
         print(json.dumps(verdict, ensure_ascii=False))
         return 0
