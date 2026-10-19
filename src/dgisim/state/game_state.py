@@ -462,6 +462,9 @@ class GameState:
             self._player1,
             self._player2,
             self._effect_stack,
+            self._common_effect_stack,
+            self._dmg_effect_stack,
+            self._leathal_dmg_effect_stack,
             self._mode,
         )
 
