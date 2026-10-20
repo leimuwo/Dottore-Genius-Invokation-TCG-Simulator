@@ -29,6 +29,13 @@
 |---|---|---|---|
 | D2 | 15 回合耗尽 → **双方都判负**（各自 −1），不做"存活角色/血量"代偿判定 | `ForkMode.timeout_penalty` | 已实现（`dgisim_ext/payoff.py` + `test_ext_contract.py`） |
 
+## 待修复的缺陷（已知、**未修**，所以还不在上表）
+
+| ID | 内容 | 谁卡在它上面 | 判据 |
+|---|---|---|---|
+| E5 | `Cards` 允许**负计数**（实测 `ChangingShifts: -1`）→ `num_cards()=sum(values)` 比真实张数少，而 `encoding` 按 `Counter.elements()` 给真实张数，两者不一致 | D-C（已改为从编码数占用，绕开了它）；任何用 `num_cards()` 的手牌数特征 | 实测 57/17 998 决策态（0.32%）触发 |
+| E7 | 骰子/角色池从 `set` 抽样（`dice.py:642`、`card.py:2489/2676/3497`、`support.py:219`）→ **同 seed 两进程轨迹不同** | T1 的「两进程 obs 逐位相同」；T7 的固定套件 + CRN | `analysis/probe_obs_vs_t1.py` 的 X1b：首个分歧 seed=0 idx=4（骰子段 8..15） |
+
 ## 复核结论：D5 先手权——**归档版实现是正确的，不是偏差**
 
 `dgisim-RL环境评估.md` 曾记录"下回合先手权反了（528/528）"。复核结论：**该结论来自测量错误**。
