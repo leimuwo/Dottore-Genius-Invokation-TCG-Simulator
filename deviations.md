@@ -18,6 +18,10 @@
 | B7 | `StartingHandSelectPhase` 对无效 `char_id` 返回同一状态（无罚分无限空转） | 否（原先是不确定行为） | `test_invariant_illegal_action_semantics.py` |
 | B9 | 非法元素调和 `print` 整张状态表 + `assert False`（`-O` 下退化为 `return None`） | 否 | `test_invariant_illegal_action_semantics.py` |
 | B3 | `hide_secrets()` 未隐藏 `initial_deck`，对手卡组表泄漏 | 否（只影响观察） | `test_invariant_decklist_hidden.py` |
+| E6 | `ElementalAura.encoding()` 迭代 `frozenset` 而非声明顺序 → 同一状态**两个进程**算出的 obs 不同（首个分歧在每角色段偏移 9/11/13/15/17） | 否（只影响观察） | `test_invariant_encoding_order.py` + `analysis/probe_obs_vs_t1.py`（X1a） |
+
+> E6 的发现方式值得记一笔：它**不可能**在同进程内测出来（同进程内 `frozenset` 顺序固定），
+> 只有"D-C × T1 交叉确认"里那条跨进程比对才把它逼出来。同类残余风险见 E7（未修）。
 
 ## 待实施的规则差异（会改变博弈语义，必须带开关）
 

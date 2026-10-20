@@ -313,9 +313,11 @@ class ElementalAura:
         return Reaction.consult_reaction_with_aura(self, incoming_elem)
 
     def encoding(self, encoding_plan: EncodingPlan) -> list[int]:
+        # NOTE(enginefix E6): 必须按**声明顺序**排布，不能迭代 `AURA_ELEMENTS`
+        # （frozenset 的迭代顺序依赖进程内 id，会让同一状态的 obs 跨进程不一致）。
         return list(chain.from_iterable([
             (encoding_plan.encode_item(elem), 1 if self._aura[elem] else 0)
-            for elem in AURA_ELEMENTS
+            for elem in AURA_ELEMENTS_ORDERED
         ]))
 
     def __iter__(self) -> Iterator[Element]:
