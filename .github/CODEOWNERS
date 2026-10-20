@@ -1,12 +1,12 @@
 # 保护"标准"本身：改这些文件需要仓库主批准，而不是由改代码的 agent 自行决定。
-# 把 @CHANGE_ME 换成你的 GitHub handle（例如 @yourname）后才会真正生效。
-*                                   @CHANGE_ME
+# 把 @leimuwo 换成你的 GitHub handle（例如 @yourname）后才会真正生效。
+*                                   @leimuwo
 
-/src/tests/                         @CHANGE_ME
-/src/tests/test_invariant_*.py      @CHANGE_ME
-/.github/workflows/                 @CHANGE_ME
-/pyproject.toml                     @CHANGE_ME
-/AGENTS.md                          @CHANGE_ME
-/deviations.md                      @CHANGE_ME
-/scripts/verify_*.py                @CHANGE_ME
-/scripts/test_baseline.json         @CHANGE_ME
+/src/tests/                         @leimuwo
+/src/tests/test_invariant_*.py      @leimuwo
+/.github/workflows/                 @leimuwo
+/pyproject.toml                     @leimuwo
+/AGENTS.md                          @leimuwo
+/deviations.md                      @leimuwo
+/scripts/verify_*.py                @leimuwo
+/scripts/test_baseline.json         @leimuwo
