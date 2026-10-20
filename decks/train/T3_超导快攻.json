@@ -1,0 +1,24 @@
+{
+  "chars": [
+    "Chongyun",
+    "RaidenShogun",
+    "Fischl"
+  ],
+  "cards": {
+    "ElementalResonanceHighVoltage": 2,
+    "ElementalResonanceWovenThunder": 2,
+    "Paimon": 2,
+    "Liben": 2,
+    "AdeptusTemptation": 2,
+    "LotusFlowerCrisp": 2,
+    "Starsigns": 2,
+    "LeaveItToMe": 2,
+    "SendOff": 2,
+    "WolfsGravestone": 2,
+    "EngulfingLightning": 2,
+    "ThunderingFury": 2,
+    "BlizzardStrayer": 2,
+    "SacrificialBow": 2,
+    "RavenBow": 2
+  }
+}
