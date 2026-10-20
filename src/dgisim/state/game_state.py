@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import cached_property
 from itertools import chain
 from typing import Callable, Optional, TYPE_CHECKING, cast
 
@@ -89,12 +90,7 @@ class GameState:
         self._common_effect_stack = common_effect_stack
         self._dmg_effect_stack = dmg_effect_stack
         self._leathal_dmg_effect_stack = lethal_dmg_effect_stack
-
-        # checkers
-        self._card_checker = CardChecker(self)
-        self._swap_checker = SwapChecker(self)
-        self._skill_checker = SkillChecker(self)
-        self._elem_tuning_checker = ElementalTuningChecker(self)
+        # checkers 改为按需构造（见下方 cached_property）：绝大多数状态从不查询它们
 
     @classmethod
     def from_default(cls, mode: md.Mode = md.DefaultMode()) -> Self:
@@ -256,25 +252,25 @@ class GameState:
             )
         )
 
-    @property
+    @cached_property
     def card_checker(self) -> CardChecker:
         """ :returns: a validity checker for playing cards.  """
-        return self._card_checker
+        return CardChecker(self)
 
-    @property
+    @cached_property
     def swap_checker(self) -> SwapChecker:
         """ :returns: a validity checker for performing character swaps.  """
-        return self._swap_checker
+        return SwapChecker(self)
 
-    @property
+    @cached_property
     def skill_checker(self) -> SkillChecker:
         """ :returns: a validity checker for casting character skills.  """
-        return self._skill_checker
+        return SkillChecker(self)
 
-    @property
+    @cached_property
     def elem_tuning_checker(self) -> ElementalTuningChecker:
         """ :returns: a validity checker for performing elemental tuning. """
-        return self._elem_tuning_checker
+        return ElementalTuningChecker(self)
 
     def belongs_to(self, object: Character | Support) -> None | Pid:
         """ :returns: which player the `object` belongs to. """
