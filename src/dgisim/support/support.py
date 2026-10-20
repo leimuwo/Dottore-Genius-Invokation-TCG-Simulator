@@ -29,6 +29,7 @@ from ..character.enums import CharacterSkillType
 from ..effect.enums import TriggeringSignal, Zone
 from ..effect.structs import StaticTarget
 from ..element import Element, PURE_ELEMENTS
+from ..helper.canonical import canonical_elements
 from ..helper.quality_of_life import BIG_INT, classproperty
 from ..status.enums import Informables, Preprocessables
 
@@ -216,7 +217,7 @@ class ChefMaoSupport(Support, stt._UsageLivingStatus):
                 eft.AddDiceEffect(
                     source=source.with_status(type(self)),
                     pid=source.pid,
-                    element=random.choice(tuple(PURE_ELEMENTS)),
+                    element=random.choice(canonical_elements(PURE_ELEMENTS)),  # enginefix(E7)
                     num=1,
                 ),
             ]

@@ -19,9 +19,11 @@
 | B9 | 非法元素调和 `print` 整张状态表 + `assert False`（`-O` 下退化为 `return None`） | 否 | `test_invariant_illegal_action_semantics.py` |
 | B3 | `hide_secrets()` 未隐藏 `initial_deck`，对手卡组表泄漏 | 否（只影响观察） | `test_invariant_decklist_hidden.py` |
 | E6 | `ElementalAura.encoding()` 迭代 `frozenset` 而非声明顺序 → 同一状态**两个进程**算出的 obs 不同（首个分歧在每角色段偏移 9/11/13/15/17） | 否（只影响观察） | `test_invariant_encoding_order.py` + `analysis/probe_obs_vs_t1.py`（X1a） |
+| E7 | 从 `set`/`dict` 抽样（`dice.py` `_LEGAL_ELEMS`/`PURE_ELEMENTS`/`all_cards()`/`summons`），以及 `Cards.__iter__`、`Dice.elems/__iter__/ordered_*` 继承 dict 插入顺序 → 同 seed 的**对局与 obs 在两个进程里都不同** | 否（只改随机数到候选的映射，抽样分布不变） | `test_invariant_sampling_order.py` + `analysis/probe_obs_vs_t1.py`（X1b） |
 
-> E6 的发现方式值得记一笔：它**不可能**在同进程内测出来（同进程内 `frozenset` 顺序固定），
-> 只有"D-C × T1 交叉确认"里那条跨进程比对才把它逼出来。同类残余风险见 E7（未修）。
+> E6/E7 的发现方式值得记一笔：这两条**不可能**在同一进程内测出来（同进程内集合/字典顺序固定），
+> 只有"D-C × T1 交叉确认"里那条跨进程比对才把它们逼出来。E7 修完后 6 个 seed × 30 个决策态的
+> obs 在两个独立进程里逐位相同。
 
 ## 待实施的规则差异（会改变博弈语义，必须带开关）
 
@@ -34,7 +36,6 @@
 | ID | 内容 | 谁卡在它上面 | 判据 |
 |---|---|---|---|
 | E5 | `Cards` 允许**负计数**（实测 `ChangingShifts: -1`）→ `num_cards()=sum(values)` 比真实张数少，而 `encoding` 按 `Counter.elements()` 给真实张数，两者不一致 | D-C（已改为从编码数占用，绕开了它）；任何用 `num_cards()` 的手牌数特征 | 实测 57/17 998 决策态（0.32%）触发 |
-| E7 | 骰子/角色池从 `set` 抽样（`dice.py:642`、`card.py:2489/2676/3497`、`support.py:219`）→ **同 seed 两进程轨迹不同** | T1 的「两进程 obs 逐位相同」；T7 的固定套件 + CRN | `analysis/probe_obs_vs_t1.py` 的 X1b：首个分歧 seed=0 idx=4（骰子段 8..15） |
 
 ## 复核结论：D5 先手权——**归档版实现是正确的，不是偏差**
 

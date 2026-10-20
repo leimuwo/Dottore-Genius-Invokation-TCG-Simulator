@@ -7,6 +7,7 @@ from typing import Any, Iterator, Iterable
 from typing_extensions import override, Self, TYPE_CHECKING
 
 from .element import Element
+from .helper.canonical import canonical_elements
 from .helper.hashable_dict import HashableDict
 from .helper.quality_of_life import BIG_INT, case_val
 
@@ -106,8 +107,11 @@ class Dice:
     def elems(self) -> Iterable[Element]:
         """
         :returns: all elements that have a number.
+
+        enginefix(E7): 顺序按元素 value 规范化，避免"同一状态两种迭代顺序"
+        让 `random.choice` 在不同进程里映射到不同元素。
         """
-        return self._dice.keys()
+        return canonical_elements(self._dice.keys())
 
     def pick_random_dice(self, num: int) -> tuple[Self, Self]:
         """
@@ -118,8 +122,11 @@ class Dice:
         num = min(self.num_dice(), num)
         if num == 0:
             return (self, type(self).from_empty())
+        # enginefix(E7): 候选池按元素 value 排序后再抽样，否则同一 seed 在不同进程里
+        # 会抽到不同骰子（dict 的 key 顺序来自更早的抽样结果，随进程变化）。
+        pool = canonical_elements(self._dice.keys())
         picked_dice: dict[Element, int] = HashableDict(Counter(
-            random.sample(list(self._dice.keys()), counts=self._dice.values(), k=num)
+            random.sample(pool, counts=[self._dice[e] for e in pool], k=num)
         ))
         return type(self)(self._dice - picked_dice), type(self)(picked_dice)
 
@@ -130,9 +137,10 @@ class Dice:
         )
 
     def __iter__(self) -> Iterator[Element]:
-        return (
+        # enginefix(E7): 规范化顺序（见 `elems`）
+        return (  # type: ignore
             elem
-            for elem in self._dice
+            for elem in canonical_elements(self._dice.keys())
             if self[elem] > 0
         )
 
@@ -172,7 +180,8 @@ class Dice:
 
     @cached_property
     def ordered_dice(self) -> tuple[Element, ...]:
-        return tuple(Counter(self._dice).elements())  # type: ignore
+        # enginefix(E7): 规范化顺序
+        return canonical_elements(Counter(self._dice).elements())  # type: ignore
 
     def encoding(self, encoding_plan: EncodingPlan) -> list[int]:
         """
@@ -638,8 +647,11 @@ class ActualDice(Dice):
         """
         dice = ActualDice.from_empty()
         dice._dice._unfreeze()
+        # enginefix(E7): `_LEGAL_ELEMS` 是 set，迭代顺序依赖进程内 id；
+        # 排序后再抽样，抽样分布不变，但同一 seed 的骰子固定下来。
+        pool = canonical_elements(ActualDice._LEGAL_ELEMS - excepted_elems)
         for i in range(size):
-            elem = random.choice(tuple(ActualDice._LEGAL_ELEMS - excepted_elems))
+            elem = random.choice(pool)
             dice._dice[elem] += 1
         dice._dice.freeze()
         return dice

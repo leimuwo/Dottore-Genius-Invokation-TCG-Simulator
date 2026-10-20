@@ -32,6 +32,7 @@ from ..effect.enums import Zone, DynamicCharacterTarget
 from ..effect.structs import StaticTarget, DamageType
 from ..element import AURA_ELEMENTS, Element, PURE_ELEMENTS
 from ..event import CardPEvent, PreprocessableEvent
+from ..helper.canonical import canonical_elements, canonical_types
 from ..helper.quality_of_life import BIG_INT
 from ..state.enums import Pid
 from ..status.enums import Preprocessables
@@ -2486,7 +2487,8 @@ class CovenantOfRock(EventCard, _DiceOnlyChoiceProvider, ArcaneLegendCard):
             instruction: act.Instruction,
     ) -> tuple[eft.Effect, ...]:
         import random
-        elem1, elem2 = random.sample(tuple(PURE_ELEMENTS), 2)
+        # enginefix(E7): `PURE_ELEMENTS` 是 set，迭代顺序依赖进程内 id；排序后再抽。
+        elem1, elem2 = random.sample(canonical_elements(PURE_ELEMENTS), 2)
         return super().effects(
             game_state,
             pid,
@@ -2673,7 +2675,7 @@ class AbyssalSummons(EventCard, _DiceOnlyChoiceProvider):
         return (
             eft.AddSummonEffect(
                 target_pid=pid,
-                summon=random.choice(tuple(backup_summons)),
+                summon=random.choice(canonical_types(backup_summons)),  # enginefix(E7)
             ),
         )
 
@@ -3487,6 +3489,8 @@ class SunyataFlower(EventCard, _SupportTargetChoiceProvider):
             for card in game_state.mode.all_cards()
             if issubclass(card, SupportCard)
         ]
+        # enginefix(E7): `all_cards()` 是 set，必须先规范化再抽样。
+        card_pool = canonical_types(card_pool)
         return (
             eft.RemoveSupportEffect(
                 target_pid=instruction.target.pid,

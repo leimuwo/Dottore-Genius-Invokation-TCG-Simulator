@@ -7,6 +7,7 @@ from typing import Iterable, Iterator, Sequence, TYPE_CHECKING, TypeVar
 
 from typing_extensions import override
 
+from ..helper.canonical import canonical_types
 from ..helper.hashable_dict import HashableDict
 
 if TYPE_CHECKING:
@@ -56,8 +57,10 @@ class Cards:
         num = min(self.num_cards(), num)
         if num == 0:
             return (self, Cards.from_empty())
+        # enginefix(E7): 候选池按类名排序后再抽样（dict 顺序来自更早的抽样结果，随进程变化）
+        pool = canonical_types(self._cards.keys())
         picked_cards: dict[type[Card], int] = dict(Counter(
-            random.sample(list(self._cards.keys()), counts=self._cards.values(), k=num)
+            random.sample(pool, counts=[self._cards[c] for c in pool], k=num)
         ))
         return Cards(self._cards - picked_cards), Cards(picked_cards)
 
@@ -73,8 +76,9 @@ class Cards:
         num = min(sum(qualified_cards.values()), num)
         if num == 0:
             return (self, Cards.from_empty())
+        pool = canonical_types(qualified_cards.keys())  # enginefix(E7)
         picked_cards: dict[type[Card], int] = dict(Counter(
-            random.sample(list(qualified_cards.keys()), counts=qualified_cards.values(), k=num)
+            random.sample(pool, counts=[qualified_cards[c] for c in pool], k=num)
         ))
         return Cards(self._cards - picked_cards), Cards(picked_cards)
 
@@ -178,7 +182,8 @@ class Cards:
 
     @cached_property
     def ordered_cards(self) -> tuple[type[Card], ...]:
-        return tuple(Counter(self._cards).elements())  # type: ignore
+        # enginefix(E7): 顺序由卡名决定，不能继承 dict 的插入顺序（它来自更早的抽样）
+        return tuple(sorted(Counter(self._cards).elements(), key=lambda c: c.__name__))  # type: ignore
 
     def encoding(self, encoding_plan: EncodingPlan) -> list[int]:
         """
@@ -238,9 +243,10 @@ class Cards:
         )
 
     def __iter__(self) -> Iterator[type[Card]]:
-        return (  # type: ignore
+        # enginefix(E7): 按卡名排序后再迭代，否则 `random.choice(cards)` 随进程变化
+        return iter(  # type: ignore
             card
-            for card in self._cards.keys()
+            for card in canonical_types(self._cards.keys())
             if self[card] > 0
         )
 
