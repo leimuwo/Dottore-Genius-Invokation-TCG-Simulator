@@ -1,4 +1,4 @@
-__version__ = "0.6.0"
+__version__ = "0.6.0+exp.1"
 
 from ._env_check import *
 

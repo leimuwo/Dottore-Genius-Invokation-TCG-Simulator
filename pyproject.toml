@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "dgisim"
-version = "0.6.0"
+name = "dgisim-fork"
+version = "0.6.0+exp.1"
 license = {file = "LICENSE"}
 
 description = "A highly customizable Genius Invokation TCG Simulator for AI training"
@@ -34,10 +34,10 @@ dependencies = [
 ]
 
 [project.urls]
-source = "https://github.com/Jarvis-Yu/Dottore-Genius-Invokation-TCG-Simulator"
-tracker = "https://github.com/Jarvis-Yu/Dottore-Genius-Invokation-TCG-Simulator/issues"
-changelog = "https://github.com/Jarvis-Yu/Dottore-Genius-Invokation-TCG-Simulator/blob/master/CHANGELOG.md"
-documentation = "https://dottore-genius-invokation-tcg-simulator.readthedocs.io/en/stable/"
+source = "https://github.com/leimuwo/Dottore-Genius-Invokation-TCG-Simulator"
+tracker = "https://github.com/leimuwo/Dottore-Genius-Invokation-TCG-Simulator/issues"
+changelog = "https://github.com/leimuwo/Dottore-Genius-Invokation-TCG-Simulator/blob/master/CHANGELOG.md"
+documentation = "https://leimuwo.github.io/Dottore-Genius-Invokation-TCG-Simulator/"
 
 [tool.setuptools.package-dir]
 dgisim = "src/package"
