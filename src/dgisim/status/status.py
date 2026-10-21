@@ -692,9 +692,9 @@ class Status:
         """
         :returns: the encoding of the content of the status. (excluding the type of status)
         """
-        field_names = set(field.name for field in fields(self))
+        field_names = tuple(field.name for field in fields(self))
         usages_value = self.__getattribute__("usages") if "usages" in field_names else 0
-        field_names.discard("usages")
+        field_names = tuple(name for name in field_names if name != "usages")
         values = [usages_value] + list(chain(*[
             [self.__getattribute__(field_name)]
             for field_name in field_names

@@ -20,6 +20,7 @@
 | B3 | `hide_secrets()` 未隐藏 `initial_deck`，对手卡组表泄漏 | 否（只影响观察） | `test_invariant_decklist_hidden.py` |
 | E6 | `ElementalAura.encoding()` 迭代 `frozenset` 而非声明顺序 → 同一状态**两个进程**算出的 obs 不同（首个分歧在每角色段偏移 9/11/13/15/17） | 否（只影响观察） | `test_invariant_encoding_order.py` + `analysis/probe_obs_vs_t1.py`（X1a） |
 | E7 | 从 `set`/`dict` 抽样（`dice.py` `_LEGAL_ELEMS`/`PURE_ELEMENTS`/`all_cards()`/`summons`），以及 `Cards.__iter__`、`Dice.elems/__iter__/ordered_*` 继承 dict 插入顺序 → 同 seed 的**对局与 obs 在两个进程里都不同** | 否（只改随机数到候选的映射，抽样分布不变） | `test_invariant_sampling_order.py` + `analysis/probe_obs_vs_t1.py`（X1b） |
+| E8 | `Status.encoding()` 用 `set` 遍历 dataclass 字段 → 同 seed、同轨迹的 `Support` 编码跨进程漂移 | 否（只影响观察） | `test_invariant_status_field_order.py` + `analysis/cardenv_acceptance.py --determinism` |
 
 > E6/E7 的发现方式值得记一笔：这两条**不可能**在同一进程内测出来（同进程内集合/字典顺序固定），
 > 只有"D-C × T1 交叉确认"里那条跨进程比对才把它们逼出来。E7 修完后 6 个 seed × 30 个决策态的
