@@ -36,7 +36,7 @@ def _items_from_episode(episode: Episode, gamma: float,
     result: list[PPOItem] = []
     for transitions in by_seat.values():
         gae = compute_gae(
-            [x.reward for x in transitions], [x.value for x in transitions],
+            [x.rewards[x.seat] for x in transitions], [x.value for x in transitions],
             [x.done for x in transitions], gamma=gamma,
             gae_lambda=gae_lambda, normalize=True)
         for transition, advantage, return_ in zip(
