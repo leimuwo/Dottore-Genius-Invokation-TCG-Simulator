@@ -25,3 +25,14 @@ class TestPPO(unittest.TestCase):
         model = PolicyValueNet(obs_dim=4, hidden_dim=16)
         with self.assertRaises(ValueError):
             PPOTrainer(model).update([])
+
+    def test_update_pads_mixed_candidate_feature_widths(self):
+        model = PolicyValueNet(obs_dim=4, hidden_dim=16)
+        items = [
+            PPOItem(torch.zeros(4), torch.tensor(1.), torch.tensor(0.),
+                    torch.zeros(2, 2), torch.tensor([0, 1]), 0, -0.5, 0.1, 0.0),
+            PPOItem(torch.zeros(4), torch.tensor(1.), torch.tensor(0.),
+                    torch.zeros(3, 4), torch.tensor([0, 1, 4]), 1, -1.0, 0.2, 0.0),
+        ]
+        metrics = PPOTrainer(model, PPOConfig(epochs=1, minibatch_size=2)).update(items)
+        self.assertTrue(torch.isfinite(torch.tensor(metrics["policy_loss"])))

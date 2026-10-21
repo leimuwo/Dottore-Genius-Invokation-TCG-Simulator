@@ -29,7 +29,9 @@ class Decision:
 @dataclass(frozen=True)
 class Transition:
     obs_fingerprint: str
+    enc: tuple[int, ...]
     seat: Pid
+    stage_index: int
     candidate_features: tuple[tuple[float, ...], ...]
     candidate_kinds: tuple[str, ...]
     action_index: int
@@ -79,7 +81,6 @@ def model_decision(model, *, generator: torch.Generator | None = None,
         # ``act`` currently builds tensors on the default device.  Device is
         # kept in the adapter signature so the rollout interface can remain
         # stable when GPU batching is added.
-        del device
         index, log_prob, value, entropy = model.act(
             obs, deterministic=deterministic, generator=generator)
         return Decision(index, float(log_prob), float(value), float(entropy))
@@ -87,7 +88,7 @@ def model_decision(model, *, generator: torch.Generator | None = None,
 
 
 def collect_episode(env: CardEnv, seed: int, policy: Policy,
-                    *, max_steps: int = 10000) -> Episode:
+                    *, max_steps: int = 10000, allow_truncated: bool = False) -> Episode:
     episode = Episode(seed=seed)
     try:
         obs = env.reset(seed=seed)
@@ -101,7 +102,9 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
             out = env.step(decision.action_index)
             episode.transitions.append(Transition(
                 obs_fingerprint=obs_fingerprint(obs),
+                enc=obs.enc,
                 seat=obs.seat,
+                stage_index=obs.stage_index,
                 candidate_features=tuple(c.feature for c in obs.choices),
                 candidate_kinds=tuple(c.kind for c in obs.choices),
                 action_index=decision.action_index,
@@ -119,6 +122,8 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
             if out.obs is None:
                 raise CardEnvError("exception", "non-terminal step returned no obs")
             obs = out.obs
+        if allow_truncated:
+            return episode
         raise CardEnvError("noop", f"rollout exceeded {max_steps} steps")
     except CardEnvError as exc:
         episode.valid = False

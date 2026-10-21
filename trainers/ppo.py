@@ -63,31 +63,24 @@ class PPOTrainer:
             rng.shuffle(indices)
             for start in range(0, len(indices), self.config.minibatch_size):
                 items = [batch[i] for i in indices[start:start + self.config.minibatch_size]]
-                losses = []
-                clip_count = 0
-                for item in items:
-                    logits, value = self.model(
-                        item.enc, item.seat, item.stage,
-                        item.candidate_features, item.candidate_kinds)
-                    dist = torch.distributions.Categorical(logits=logits)
-                    action = torch.tensor(item.action_index, device=logits.device)
-                    log_prob = dist.log_prob(action)
-                    ratio = torch.exp(log_prob - item.old_log_prob)
-                    advantage = torch.tensor(item.advantage, device=logits.device)
-                    return_ = torch.tensor(item.return_, device=logits.device)
-                    unclipped = ratio * advantage
-                    clipped = torch.clamp(ratio, 1 - self.config.clip_range,
-                                          1 + self.config.clip_range) * advantage
-                    policy_loss = -torch.minimum(unclipped, clipped)
-                    value_loss = 0.5 * (value - return_).square()
-                    entropy = dist.entropy()
-                    losses.append(policy_loss + self.config.value_coef * value_loss
-                                  - self.config.entropy_coef * entropy)
-                    clip_count += int(float(torch.abs(ratio - 1.0).detach()) > self.config.clip_range)
-                    metrics["policy_loss"] += float(policy_loss.detach())
-                    metrics["value_loss"] += float(value_loss.detach())
-                    metrics["entropy"] += float(entropy.detach())
-                loss = torch.stack(losses).mean()
+                enc, seat, stage, features, kinds, mask, actions, old_log_probs, advantages, returns = self._collate(items)
+                logits, values = self.model(enc, seat, stage, features, kinds)
+                if logits.ndim == 1:
+                    logits = logits.unsqueeze(0)
+                    values = values.unsqueeze(0)
+                logits = logits.masked_fill(~mask, torch.finfo(logits.dtype).min)
+                log_probs = torch.log_softmax(logits, dim=-1)
+                probs = torch.softmax(logits, dim=-1)
+                log_prob = log_probs.gather(1, actions.unsqueeze(1)).squeeze(1)
+                ratio = torch.exp(log_prob - old_log_probs)
+                unclipped = ratio * advantages
+                clipped = torch.clamp(ratio, 1 - self.config.clip_range,
+                                      1 + self.config.clip_range) * advantages
+                policy_loss = -torch.minimum(unclipped, clipped)
+                value_loss = 0.5 * (values - returns).square()
+                entropy = -(probs * log_probs).masked_fill(~mask, 0.0).sum(dim=-1)
+                loss = (policy_loss + self.config.value_coef * value_loss
+                        - self.config.entropy_coef * entropy).mean()
                 if not torch.isfinite(loss):
                     raise FloatingPointError("non-finite PPO loss")
                 self.optimizer.zero_grad(set_to_none=True)
@@ -98,9 +91,36 @@ class PPOTrainer:
                     raise FloatingPointError("non-finite PPO gradient norm")
                 self.optimizer.step()
                 metrics["grad_norm"] += float(grad_norm)
-                metrics["clip_fraction"] += clip_count / len(items)
+                metrics["policy_loss"] += float(policy_loss.detach().mean())
+                metrics["value_loss"] += float(value_loss.detach().mean())
+                metrics["entropy"] += float(entropy.detach().mean())
+                metrics["clip_fraction"] += float((torch.abs(ratio - 1.0) > self.config.clip_range).float().mean())
                 metrics["updates"] += 1
-        count = len(batch) * self.config.epochs
+        count = metrics["updates"]
         for key in ("policy_loss", "value_loss", "entropy", "clip_fraction", "grad_norm"):
             metrics[key] /= count
         return metrics
+
+    def _collate(self, items):
+        batch = len(items)
+        max_choices = max(item.candidate_features.shape[0] for item in items)
+        feature_dim = self.model.feature_dim
+        enc = torch.stack([item.enc for item in items])
+        seat = torch.stack([item.seat for item in items])
+        stage = torch.stack([item.stage for item in items])
+        features = torch.zeros(batch, max_choices, feature_dim)
+        kinds = torch.zeros(batch, max_choices, dtype=torch.long)
+        mask = torch.zeros(batch, max_choices, dtype=torch.bool)
+        for row, item in enumerate(items):
+            n = item.candidate_features.shape[0]
+            width = item.candidate_features.shape[-1]
+            if width > feature_dim:
+                raise ValueError("PPO item feature width exceeds model feature_dim")
+            features[row, :n, :width] = item.candidate_features
+            kinds[row, :n] = item.candidate_kinds
+            mask[row, :n] = True
+        actions = torch.tensor([item.action_index for item in items], dtype=torch.long)
+        old_log_probs = torch.tensor([item.old_log_prob for item in items])
+        advantages = torch.tensor([item.advantage for item in items])
+        returns = torch.tensor([item.return_ for item in items])
+        return enc, seat, stage, features, kinds, mask, actions, old_log_probs, advantages, returns

@@ -88,7 +88,7 @@ class PolicyValueNet(nn.Module):
         expanded = state.unsqueeze(1).expand(-1, candidate_features.shape[1], -1)
         logits = self.policy_head(torch.cat((expanded, candidate_features, kind), dim=-1)).squeeze(-1)
         value = self.value_head(state).squeeze(-1)
-        return logits.squeeze(0), value.squeeze(0)
+        return (logits.squeeze(0), value.squeeze(0)) if logits.shape[0] == 1 else (logits, value)
 
     @staticmethod
     def _kind_id(kind: str) -> int:
