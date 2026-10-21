@@ -20,7 +20,8 @@
 奖励口径
 --------
 按 `deviations.md` D2：击杀 `{胜者:+1, 败者:-1}`；**超时双方都 −1**。
-所以 `info["rewards"]` 是二元组，训练侧禁止写 `r_p2 = -r_p1`。
+默认叠加 `gamma=0.99`、`shaping_lambda=1e-2` 的公开势函数塑形；可用 `shaping=False` 做稀疏奖励消融。
+所以 `info["rewards"]` 是按席位映射，训练侧禁止写 `r_p2 = -r_p1`。
 """
 from __future__ import annotations
 
@@ -50,6 +51,7 @@ from src.dgisim.state.game_state import GameState
 
 from .modes import ForkMode, UpstreamCompatMode
 from .payoff import payoff_of
+from .potential import public_potential
 from .selection import Selection
 from .encoding import FastEncodingPlan
 
@@ -172,10 +174,20 @@ class CardEnv:
             mode: Mode | None = None,
             plan: EncodingPlan = DEFAULT_PLAN,
             timeout_penalty: float = -1.0,
+            gamma: float = 0.99,
+            shaping_lambda: float = 1e-2,
+            shaping: bool = True,
     ) -> None:
         self._mode = mode or ForkMode()
         self._plan = plan
         self._timeout_penalty = timeout_penalty
+        if not 0.0 < gamma <= 1.0:
+            raise ValueError("gamma must be in (0, 1]")
+        if shaping_lambda < 0.0:
+            raise ValueError("shaping_lambda must be non-negative")
+        self._gamma = gamma
+        self._shaping_lambda = shaping_lambda
+        self._shaping = shaping
         self._rng_state = random.Random().getstate()
         with self._engine_rng():
             self._gs: GameState = GameState.from_default(self._mode)
@@ -418,6 +430,7 @@ class CardEnv:
 
         action: PlayerAction = self._gen.generate_action()
         before = (hash(self._gs), self._gs.waiting_for())
+        before_state = self._gs
         start = time.perf_counter()
         with self._engine_rng():
             state = self._gs.action_step(actor, action)
@@ -433,6 +446,7 @@ class CardEnv:
         self._stage_changed()
         if self._gs.game_end():
             rewards = payoff_of(self._gs, self._timeout_penalty)
+            rewards = self._with_shaping(rewards, before_state, self._gs)
             return StepOut(
                 None,
                 rewards[actor],
@@ -441,9 +455,22 @@ class CardEnv:
                  "decision_index": self._decision_index, "actor": actor.name,
                  "committed": True},
             )
-        return StepOut(self.obs(), 0.0, False,
+        rewards = self._with_shaping(
+            {Pid.P1: 0.0, Pid.P2: 0.0}, before_state, self._gs)
+        return StepOut(self.obs(), rewards[actor], False,
                        {"filled": False, "actor": actor.name, "committed": True,
-                        "rewards": {Pid.P1: 0.0, Pid.P2: 0.0}})
+                        "rewards": rewards})
+
+    def _with_shaping(self, rewards, before, after):
+        if not self._shaping or self._shaping_lambda == 0.0:
+            return rewards
+        return {
+            pid: reward + self._shaping_lambda * (
+                self._gamma * public_potential(after, pid)
+                - public_potential(before, pid)
+            )
+            for pid, reward in rewards.items()
+        }
 
     def fork(self) -> "CardEnv":
         """共享同一个不可变 `GameState` 的分叉；choice 层状态也一并复制。"""
@@ -451,6 +478,9 @@ class CardEnv:
         new._mode = self._mode
         new._plan = self._plan
         new._timeout_penalty = self._timeout_penalty
+        new._gamma = self._gamma
+        new._shaping_lambda = self._shaping_lambda
+        new._shaping = self._shaping
         new._gs = self._gs
         new._gen = self._gen
         new._seat = self._seat

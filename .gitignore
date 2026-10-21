@@ -5,6 +5,7 @@ __pycache__/
 dist/
 doc_html/
 venv/
+agent-docs/
 
 .coverage
 .DS_Store

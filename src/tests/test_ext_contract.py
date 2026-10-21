@@ -7,6 +7,7 @@ from src.dgisim.state.enums import Pid
 
 from dgisim_ext.modes import ForkMode, UpstreamCompatMode
 from dgisim_ext.payoff import TerminalReason, per_seat_payoff
+from dgisim_ext.potential import public_potential
 from dgisim_ext.step_guard import step_checked
 
 
@@ -37,6 +38,23 @@ class TestPayoffMatrix(unittest.TestCase):
         payoff = per_seat_payoff(TerminalReason.TIMEOUT, None)
         self.assertEqual(sum(payoff.values()), -2.0, "超时不是零和：两边都 -1")
         self.assertNotEqual(payoff[Pid.P2], -payoff[Pid.P1])
+
+
+class TestPotentialShaping(unittest.TestCase):
+    def test_public_potential_is_antisymmetric(self):
+        from dgisim_ext.env_api import CardEnv
+        env = CardEnv(shaping=False)
+        env.reset(seed=7)
+        self.assertAlmostEqual(
+            public_potential(env.state, Pid.P1) + public_potential(env.state, Pid.P2),
+            0.0,
+        )
+
+    def test_shaping_can_be_disabled_and_is_configured(self):
+        from dgisim_ext.env_api import CardEnv
+        env = CardEnv(shaping=False)
+        self.assertEqual(env._shaping_lambda, 1e-2)
+        self.assertFalse(env._shaping)
 
 
 class TestStepGuard(unittest.TestCase):
