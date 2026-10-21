@@ -1,0 +1,25 @@
+{
+  "rounds": [
+    {
+      "samples": 384,
+      "mean_ms": 1.4665309895640632,
+      "p95_ms": 2.847499999916181,
+      "max_ms": 4.393300000174349
+    },
+    {
+      "samples": 384,
+      "mean_ms": 1.3978640624886889,
+      "p95_ms": 2.6828000000023167,
+      "max_ms": 6.069600000046194
+    },
+    {
+      "samples": 384,
+      "mean_ms": 1.4384020833494067,
+      "p95_ms": 2.7763000002778426,
+      "max_ms": 5.539100000078179
+    }
+  ],
+  "passed": false,
+  "source_sha256": "3c36a042a298535797ba777e686e4e0d8c9e75b811de3387a900b535fe869a0f",
+  "method": "18 full games across 9 decks; every seventh fresh decision; both observation and choice caches cleared before timing full obs()"
+}

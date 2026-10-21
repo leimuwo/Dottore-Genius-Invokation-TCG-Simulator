@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "games": 10000,
+  "choices": 8436504,
+  "commits": 1531303,
+  "terminal_counts": {
+    "timeout": 8193,
+    "kill:P2": 931,
+    "kill:P1": 876
+  },
+  "decks": 9,
+  "ordered_matchups": 81,
+  "seat_counts": {
+    "test/V7_水债皇": {
+      "P1": 1109,
+      "P2": 1109
+    },
+    "test/V8_双岩一斗": {
+      "P1": 1104,
+      "P2": 1104
+    },
+    "test/V9_Klee_Albedo_Wanderer": {
+      "P1": 1104,
+      "P2": 1104
+    },
+    "train/T1_温水皇": {
+      "P1": 1114,
+      "P2": 1114
+    },
+    "train/T2_雷鹤": {
+      "P1": 1114,
+      "P2": 1114
+    },
+    "train/T3_超导快攻": {
+      "P1": 1114,
+      "P2": 1114
+    },
+    "train/T4_莫皇草": {
+      "P1": 1114,
+      "P2": 1114
+    },
+    "train/T5_一斗双岩": {
+      "P1": 1114,
+      "P2": 1114
+    },
+    "train/T6_双火单点": {
+      "P1": 1113,
+      "P2": 1113
+    }
+  },
+  "all_candidates_match_recorded_index": true,
+  "candidate_features_unique": true,
+  "both_seats_balanced": true,
+  "ledger_checksums_match": true
+}

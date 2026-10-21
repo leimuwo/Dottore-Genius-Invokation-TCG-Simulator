@@ -1,5 +1,8 @@
 # Dottore Genius Invokation TCG Simulator
 
+本 fork 的 M1 已验收。GPU 环境接续开发、当前实现范围及自检命令见
+[GPU 环境交接说明](docs/GPU-handoff.md)；M2 PPO 训练入口尚未实现。
+
 [![PyPI Version](https://img.shields.io/pypi/v/dgisim.svg)](https://pypi.org/project/dgisim/)
 [![Documentation Status](https://readthedocs.org/projects/dottore-genius-invokation-tcg-simulator/badge/?version=latest)](https://dottore-genius-invokation-tcg-simulator.readthedocs.io/en/latest/?badge=latest)
 ![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)

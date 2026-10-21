@@ -1,0 +1,52 @@
+{
+  "games": 10000,
+  "completed": 10000,
+  "failed": 0,
+  "terminal_counts": {
+    "timeout": 8193,
+    "kill:P1": 876,
+    "kill:P2": 931
+  },
+  "timeout_rate": 0.8193,
+  "choices": 8436504,
+  "stats": {
+    "attempts": 8436504,
+    "commits": 1531303,
+    "illegal": 0,
+    "exception": 0,
+    "noop": 0,
+    "encodes": 1531303,
+    "encode_seconds": 810.374504899574,
+    "engine_seconds": 1118.0202532001495
+  },
+  "illegal_rate": 0.0,
+  "exception_rate": 0.0,
+  "noop_rate": 0.0,
+  "wall_s": 735.0101130000003,
+  "cpu_s": 5787.5,
+  "games_per_s": 13.605254979668553,
+  "choices_per_s": 11478.078805699368,
+  "commits_per_s": 2083.3767766131396,
+  "encode_ms": 0.529205849462565,
+  "failures": [],
+  "source_unchanged": true,
+  "passed": true,
+  "ledger_sha256": {
+    "events-00.jsonl.gz": "df36355a30193fe7a1b214799580203378e5cc752351598e69d2768971d25e12",
+    "events-01.jsonl.gz": "629651a07f5277e3ba6b26a0e36ba40e10d2572fe0ebadd63faf5ca3959fed9f",
+    "events-02.jsonl.gz": "32053a279009d886b1402f7d6e642334c472c640e66c4fda1badcdb4ae25f73c",
+    "events-03.jsonl.gz": "49143a23d52e3f7f7627e9302cfb6b77682a7eef0a3898ae294c805a54547553",
+    "events-04.jsonl.gz": "86a2f940a851e96c1326e3d48f8eb63627040614766ad07b066b9be8337d5a18",
+    "events-05.jsonl.gz": "30353eec9f3d53123c696a3a011e044e6c650e630195d989cee4bdc089d97f9f",
+    "events-06.jsonl.gz": "7975304d3bda823ae074967c64ecc7cc9ef48515ac3a54beaa7e654608460ec4",
+    "events-07.jsonl.gz": "a2643f16c87f2f3f478756155167d030b6d2c16a244b47851ebff6b2c9ec7e1d",
+    "games-00.jsonl": "7c9f063dcb434f9cca9850c18953c8771fa000015d4ec52e1a325fca9b02f21a",
+    "games-01.jsonl": "16d426ff5b41e9e6f46fd76aa0342dbabe995702c7e9ebcaf4eafe9b05d53bef",
+    "games-02.jsonl": "c15e043b21cebdb3a9a0e9866447cb2eb1e0be96e474cd1de566d1767830f43e",
+    "games-03.jsonl": "bad04a95c01d830e609ddd42cf0386af6de5a3ab1f26ce1a753f99a4245569c1",
+    "games-04.jsonl": "928af733c6cee53c0b6bcabf7e884512dd9cdcfd582fdefbe4db9a69c63854a3",
+    "games-05.jsonl": "e5b46eaf386b18fc386c532a88fb22ecc046efcd0a5102e189b23811248ddbe9",
+    "games-06.jsonl": "c0b600f1ada1390a42fc9b15788b011fce47a4953cd528afaccc3d78421a8fed",
+    "games-07.jsonl": "88e6573da44a439cb65d77923d6880784fcbeaf4603061719760e21264f04112"
+  }
+}

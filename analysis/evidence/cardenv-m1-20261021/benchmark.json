@@ -1,0 +1,127 @@
+{
+  "passed": true,
+  "rounds": [
+    {
+      "games": 18,
+      "completed": 18,
+      "failed": 0,
+      "terminal_counts": {
+        "timeout": 16,
+        "kill:P2": 2
+      },
+      "timeout_rate": 0.8888888888888888,
+      "choices": 15106,
+      "stats": {
+        "attempts": 15106,
+        "commits": 2743,
+        "illegal": 0,
+        "exception": 0,
+        "noop": 0,
+        "encodes": 2743,
+        "encode_seconds": 1.6116899999976795,
+        "engine_seconds": 2.2135211000045274
+      },
+      "illegal_rate": 0.0,
+      "exception_rate": 0.0,
+      "noop_rate": 0.0,
+      "wall_s": 11.66250510000009,
+      "cpu_s": 11.40625,
+      "games_per_s": 1.5434076851979137,
+      "choices_per_s": 1295.2620273666491,
+      "commits_per_s": 235.19818224988205,
+      "encode_ms": 0.5875647101704993,
+      "failures": [],
+      "cold_mean_ms": 0.5879271192653179,
+      "cold_p95_ms": 1.14320000011503,
+      "hot_mean_ms": 0.010503243743307756,
+      "hot_p95_ms": 0.02040000003944442,
+      "repeat": 0,
+      "estimated_100k_seconds": 77.20445584536004,
+      "passed": true
+    },
+    {
+      "games": 18,
+      "completed": 18,
+      "failed": 0,
+      "terminal_counts": {
+        "timeout": 16,
+        "kill:P2": 2
+      },
+      "timeout_rate": 0.8888888888888888,
+      "choices": 15106,
+      "stats": {
+        "attempts": 15106,
+        "commits": 2743,
+        "illegal": 0,
+        "exception": 0,
+        "noop": 0,
+        "encodes": 2743,
+        "encode_seconds": 1.694091500002969,
+        "engine_seconds": 2.346472000003587
+      },
+      "illegal_rate": 0.0,
+      "exception_rate": 0.0,
+      "noop_rate": 0.0,
+      "wall_s": 12.22854510000002,
+      "cpu_s": 11.703125,
+      "games_per_s": 1.4719657860197917,
+      "choices_per_s": 1235.3063979786095,
+      "commits_per_s": 224.311230614016,
+      "encode_ms": 0.6176053590969628,
+      "failures": [],
+      "cold_mean_ms": 0.6182089174321553,
+      "cold_p95_ms": 1.207600000043385,
+      "hot_mean_ms": 0.01082655898393786,
+      "hot_p95_ms": 0.021100000139995245,
+      "repeat": 1,
+      "estimated_100k_seconds": 80.95157619488958,
+      "passed": true
+    },
+    {
+      "games": 18,
+      "completed": 18,
+      "failed": 0,
+      "terminal_counts": {
+        "timeout": 16,
+        "kill:P2": 2
+      },
+      "timeout_rate": 0.8888888888888888,
+      "choices": 15106,
+      "stats": {
+        "attempts": 15106,
+        "commits": 2743,
+        "illegal": 0,
+        "exception": 0,
+        "noop": 0,
+        "encodes": 2743,
+        "encode_seconds": 1.7219537999965269,
+        "engine_seconds": 2.3404594999985875
+      },
+      "illegal_rate": 0.0,
+      "exception_rate": 0.0,
+      "noop_rate": 0.0,
+      "wall_s": 12.228422200000068,
+      "cpu_s": 11.640625,
+      "games_per_s": 1.471980579800385,
+      "choices_per_s": 1235.3188132480343,
+      "commits_per_s": 224.3134850218031,
+      "encode_ms": 0.6277629602612201,
+      "failures": [],
+      "cold_mean_ms": 0.6281904954115767,
+      "cold_p95_ms": 1.1933000000681204,
+      "hot_mean_ms": 0.010889831855338716,
+      "hot_p95_ms": 0.02099999983329326,
+      "repeat": 2,
+      "estimated_100k_seconds": 80.95076261088354,
+      "passed": true
+    }
+  ],
+  "actual_100k": {
+    "choices": 100000,
+    "wall_s": 77.1074150999998,
+    "choices_per_s": 1296.8921324922,
+    "complete_games": 119,
+    "passed": true
+  },
+  "note": "round estimates are extrapolations; actual_100k times 100,000 real choice steps"
+}
