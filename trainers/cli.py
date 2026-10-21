@@ -11,6 +11,7 @@ from pathlib import Path
 
 import torch
 
+from dgisim_ext.env_api import CardEnv
 from .checkpoint import save_checkpoint
 from .loop import train_steps
 from .policy import PolicyValueNet
@@ -23,6 +24,8 @@ def main(argv=None) -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output", type=Path, default=Path("runs/m2-smoke"))
     parser.add_argument("--hidden-dim", type=int, default=256)
+    parser.add_argument("--shaping-lambda", type=float, default=1e-2)
+    parser.add_argument("--no-shaping", action="store_true")
     args = parser.parse_args(argv)
     if args.steps <= 0:
         parser.error("--steps must be positive")
@@ -31,7 +34,10 @@ def main(argv=None) -> int:
     torch.manual_seed(args.seed)
     model = PolicyValueNet(hidden_dim=args.hidden_dim)
     trainer = PPOTrainer(model, PPOConfig())
-    result = train_steps(model, trainer, steps=args.steps, seed=args.seed)
+    env_factory = lambda: CardEnv(
+        shaping=not args.no_shaping, shaping_lambda=args.shaping_lambda)
+    result = train_steps(model, trainer, steps=args.steps, seed=args.seed,
+                         env_factory=env_factory)
     manifest = {
         "created_at": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(),
@@ -41,7 +47,8 @@ def main(argv=None) -> int:
         "choice_steps": args.steps,
         "model": {"obs_dim": model.obs_dim, "feature_dim": model.feature_dim,
                   "hidden_dim": model.hidden_dim},
-        "reward": {"gamma": 0.99, "shaping_lambda": 1e-2, "shaping": True},
+        "reward": {"gamma": 0.99, "shaping_lambda": args.shaping_lambda,
+                   "shaping": not args.no_shaping},
         "result": result.__dict__,
     }
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))

@@ -15,3 +15,9 @@ class TestCLI(unittest.TestCase):
             self.assertEqual(manifest["choice_steps"], 4)
             self.assertEqual(manifest["reward"]["shaping_lambda"], 1e-2)
 
+    def test_sparse_reward_switch_is_recorded(self):
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(main(["--steps", "4", "--no-shaping", "--output", folder]), 0)
+            manifest = json.loads((Path(folder) / "manifest.json").read_text())
+            self.assertFalse(manifest["reward"]["shaping"])
+
