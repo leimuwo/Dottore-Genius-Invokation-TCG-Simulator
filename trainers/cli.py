@@ -28,9 +28,13 @@ def main(argv=None) -> int:
     parser.add_argument("--no-shaping", action="store_true")
     parser.add_argument("--rollout-steps", type=int, default=2048)
     parser.add_argument("--max-episode-steps", type=int, default=1000)
+    parser.add_argument("--torch-threads", type=int, default=2)
     args = parser.parse_args(argv)
     if args.steps <= 0:
         parser.error("--steps must be positive")
+    if args.torch_threads <= 0:
+        parser.error("--torch-threads must be positive")
+    torch.set_num_threads(args.torch_threads)
     args.output.mkdir(parents=True, exist_ok=True)
     random.seed(args.seed)
     torch.manual_seed(args.seed)
