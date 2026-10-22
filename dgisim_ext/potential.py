@@ -8,9 +8,8 @@ __all__ = ["public_potential"]
 
 
 def _player_value(player) -> float:
-    return 10.0 * len(player.characters.get_alive_characters()) + sum(
-        character.hp for character in player.characters
-    )
+    alive = player.characters.get_alive_characters()
+    return 10.0 * len(alive) + sum(character.hp for character in alive)
 
 
 def public_potential(state: GameState, pid: Pid) -> float:

@@ -56,6 +56,12 @@ class TestPotentialShaping(unittest.TestCase):
         self.assertEqual(env._shaping_lambda, 1e-2)
         self.assertFalse(env._shaping)
 
+    def test_public_potential_has_no_dead_character_sentinel(self):
+        from dgisim_ext.env_api import CardEnv
+        env = CardEnv(shaping=False)
+        env.reset(seed=1)
+        self.assertLess(abs(public_potential(env.state, Pid.P1)), 200.0)
+
 
 class TestStepGuard(unittest.TestCase):
     def test_zero_vector_rejected(self):
