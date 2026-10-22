@@ -26,6 +26,8 @@ def main(argv=None) -> int:
     parser.add_argument("--hidden-dim", type=int, default=256)
     parser.add_argument("--shaping-lambda", type=float, default=1e-2)
     parser.add_argument("--no-shaping", action="store_true")
+    parser.add_argument("--rollout-steps", type=int, default=2048)
+    parser.add_argument("--max-episode-steps", type=int, default=1000)
     args = parser.parse_args(argv)
     if args.steps <= 0:
         parser.error("--steps must be positive")
@@ -37,7 +39,9 @@ def main(argv=None) -> int:
     env_factory = lambda: CardEnv(
         shaping=not args.no_shaping, shaping_lambda=args.shaping_lambda)
     result = train_steps(model, trainer, steps=args.steps, seed=args.seed,
-                         env_factory=env_factory)
+                         env_factory=env_factory,
+                         rollout_steps=args.rollout_steps,
+                         max_episode_steps=args.max_episode_steps)
     manifest = {
         "created_at": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(),
