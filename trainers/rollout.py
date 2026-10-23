@@ -51,6 +51,7 @@ class Episode:
     valid: bool = True
     failure: dict | None = None
     terminal_reason: str | None = None
+    bootstrap_obs: Obs | None = None
 
 
 class Policy(Protocol):
@@ -123,6 +124,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 raise CardEnvError("exception", "non-terminal step returned no obs")
             obs = out.obs
         if allow_truncated:
+            episode.bootstrap_obs = obs
             return episode
         raise CardEnvError("noop", f"rollout exceeded {max_steps} steps")
     except CardEnvError as exc:

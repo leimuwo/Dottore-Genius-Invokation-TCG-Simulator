@@ -27,7 +27,7 @@ class TrainResult:
 
 
 def _items_from_episode(episode: Episode, gamma: float,
-                        gae_lambda: float) -> list[PPOItem]:
+                        gae_lambda: float, model=None) -> list[PPOItem]:
     if not episode.valid or not episode.transitions:
         return []
     # Choice layers are the optimization steps. Rewards are zero at layers
@@ -37,10 +37,16 @@ def _items_from_episode(episode: Episode, gamma: float,
         by_seat.setdefault(transition.seat, []).append(transition)
     result: list[PPOItem] = []
     for transitions in by_seat.values():
+        next_value = 0.0
+        if episode.bootstrap_obs is not None and transitions[-1].seat is episode.bootstrap_obs.seat:
+            if model is None:
+                raise ValueError("model is required to bootstrap truncated rollout")
+            with torch.no_grad():
+                next_value = float(model.distribution(episode.bootstrap_obs)[2])
         gae = compute_gae(
             [x.rewards[x.seat] for x in transitions], [x.value for x in transitions],
             [x.done for x in transitions], gamma=gamma,
-            gae_lambda=gae_lambda, normalize=True)
+            gae_lambda=gae_lambda, next_value=next_value, normalize=False)
         for transition, advantage, return_ in zip(
                 transitions, gae.advantages, gae.returns):
             result.append(PPOItem(
@@ -87,6 +93,21 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         if not pending:
             return
         batch_sizes.append(len(pending))
+        advantages = torch.tensor([item.advantage for item in pending], dtype=torch.float32)
+        if len(advantages) > 1:
+            std = advantages.std(unbiased=False)
+            if float(std) > 1e-8:
+                mean = float(advantages.mean())
+                scale = float(std)
+                pending = [PPOItem(
+                    enc=item.enc, seat=item.seat, stage=item.stage,
+                    candidate_features=item.candidate_features,
+                    candidate_kinds=item.candidate_kinds,
+                    action_index=item.action_index,
+                    old_log_prob=item.old_log_prob,
+                    advantage=(item.advantage - mean) / scale,
+                    return_=item.return_,
+                ) for item in pending]
         start = time.perf_counter()
         metrics = trainer.update(pending, seed=seed + updates)
         timings["ppo_update"] += time.perf_counter() - start
@@ -108,7 +129,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         if episode.valid:
             valid_episodes += 1
             start = time.perf_counter()
-            pending.extend(_items_from_episode(episode, gamma, gae_lambda))
+            pending.extend(_items_from_episode(episode, gamma, gae_lambda, model))
             timings["gae"] += time.perf_counter() - start
         else:
             failed_episodes += 1
