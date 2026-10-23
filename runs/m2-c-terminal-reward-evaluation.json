@@ -1,0 +1,170 @@
+{
+  "terminal_gpu_seed0_P1": {
+    "games": 27,
+    "wins": 25,
+    "kills": 26,
+    "timeouts": 1,
+    "payoff_p1": 23.0,
+    "payoff_p2": -25.0,
+    "winrate_ci95": [
+      0.7663040731697686,
+      0.9794453459390113
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 25,
+        "games": 27,
+        "kills": 26,
+        "timeouts": 1,
+        "payoff": 23.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "terminal_gpu_seed0_P2": {
+    "games": 27,
+    "wins": 27,
+    "kills": 27,
+    "timeouts": 0,
+    "payoff_p1": -27.0,
+    "payoff_p2": 27.0,
+    "winrate_ci95": [
+      0.8754449702581328,
+      0.9999999999999998
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 27,
+        "games": 27,
+        "kills": 27,
+        "timeouts": 0,
+        "payoff": 27.0
+      }
+    }
+  },
+  "terminal_gpu_seed1_P1": {
+    "games": 27,
+    "wins": 10,
+    "kills": 10,
+    "timeouts": 17,
+    "payoff_p1": -7.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.21532512960965597,
+      0.5577076558789761
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 10,
+        "games": 27,
+        "kills": 10,
+        "timeouts": 17,
+        "payoff": -7.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "terminal_gpu_seed1_P2": {
+    "games": 27,
+    "wins": 11,
+    "kills": 11,
+    "timeouts": 16,
+    "payoff_p1": -27.0,
+    "payoff_p2": -5.0,
+    "winrate_ci95": [
+      0.24514757074395552,
+      0.592732990319353
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 11,
+        "games": 27,
+        "kills": 11,
+        "timeouts": 16,
+        "payoff": -5.0
+      }
+    }
+  },
+  "terminal_gpu_seed2_P1": {
+    "games": 27,
+    "wins": 24,
+    "kills": 24,
+    "timeouts": 3,
+    "payoff_p1": 21.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.7194219918172017,
+      0.9614796517169016
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 24,
+        "games": 27,
+        "kills": 24,
+        "timeouts": 3,
+        "payoff": 21.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "terminal_gpu_seed2_P2": {
+    "games": 27,
+    "wins": 25,
+    "kills": 25,
+    "timeouts": 2,
+    "payoff_p1": -27.0,
+    "payoff_p2": 23.0,
+    "winrate_ci95": [
+      0.7663040731697686,
+      0.9794453459390113
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 25,
+        "games": 27,
+        "kills": 25,
+        "timeouts": 2,
+        "payoff": 23.0
+      }
+    }
+  }
+}
