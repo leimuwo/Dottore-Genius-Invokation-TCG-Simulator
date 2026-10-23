@@ -60,6 +60,7 @@ def main(argv=None) -> int:
         "torch": torch.__version__,
         "cuda": torch.version.cuda,
         "device": str(device),
+        "env_workers": args.env_workers,
         "seed": args.seed,
         "choice_steps": args.steps,
         "model": {"obs_dim": model.obs_dim, "feature_dim": model.feature_dim,
