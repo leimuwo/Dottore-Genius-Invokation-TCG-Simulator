@@ -84,6 +84,14 @@ class PolicyValueNet(nn.Module):
             raise ValueError("candidate kind and feature shapes must match")
         if state.shape[0] != candidate_features.shape[0]:
             raise ValueError("state and candidate batch sizes must match")
+        # Choice payload codes are engine dictionary IDs (typically 1..3000),
+        # while counts/semantic tags are small.  Keep the code channel on the
+        # same scale as the state encoder so raw IDs cannot dominate logits.
+        candidate_features = candidate_features.clone()
+        if candidate_features.shape[-1] >= 1:
+            candidate_features[..., 0] = candidate_features[..., 0] / 4096.0
+        if candidate_features.shape[-1] >= 2:
+            candidate_features[..., 1] = candidate_features[..., 1] / 64.0
         kind = self.kind_embedding(candidate_kinds.long())
         expanded = state.unsqueeze(1).expand(-1, candidate_features.shape[1], -1)
         logits = self.policy_head(torch.cat((expanded, candidate_features, kind), dim=-1)).squeeze(-1)
