@@ -83,7 +83,7 @@ def model_decision(model, *, generator: torch.Generator | None = None,
         # kept in the adapter signature so the rollout interface can remain
         # stable when GPU batching is added.
         index, log_prob, value, entropy = model.act(
-            obs, deterministic=deterministic, generator=generator)
+            obs, deterministic=deterministic, generator=generator, device=device)
         return Decision(index, float(log_prob), float(value), float(entropy))
     return choose
 

@@ -42,7 +42,7 @@ def _items_from_episode(episode: Episode, gamma: float,
             if model is None:
                 raise ValueError("model is required to bootstrap truncated rollout")
             with torch.no_grad():
-                next_value = float(model.distribution(episode.bootstrap_obs)[2])
+                next_value = float(model.distribution(episode.bootstrap_obs, device=next(model.parameters()).device)[2])
         gae = compute_gae(
             [x.rewards[x.seat] for x in transitions], [x.value for x in transitions],
             [x.done for x in transitions], gamma=gamma,
@@ -77,8 +77,9 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         raise ValueError("steps must be positive")
     if rollout_steps <= 0 or max_episode_steps <= 0:
         raise ValueError("rollout_steps and max_episode_steps must be positive")
-    generator = torch.Generator().manual_seed(seed)
-    policy = model_decision(model, generator=generator)
+    device = next(model.parameters()).device
+    generator = torch.Generator(device=device).manual_seed(seed)
+    policy = model_decision(model, generator=generator, device=device)
     count = 0
     game_seed = seed
     env = env_factory()

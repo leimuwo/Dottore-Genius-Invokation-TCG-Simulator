@@ -102,15 +102,16 @@ class PPOTrainer:
         return metrics
 
     def _collate(self, items):
+        device = next(self.model.parameters()).device
         batch = len(items)
         max_choices = max(item.candidate_features.shape[0] for item in items)
         feature_dim = self.model.feature_dim
-        enc = torch.stack([item.enc for item in items])
-        seat = torch.stack([item.seat for item in items])
-        stage = torch.stack([item.stage for item in items])
-        features = torch.zeros(batch, max_choices, feature_dim)
-        kinds = torch.zeros(batch, max_choices, dtype=torch.long)
-        mask = torch.zeros(batch, max_choices, dtype=torch.bool)
+        enc = torch.stack([item.enc for item in items]).to(device)
+        seat = torch.stack([item.seat for item in items]).to(device)
+        stage = torch.stack([item.stage for item in items]).to(device)
+        features = torch.zeros(batch, max_choices, feature_dim, device=device)
+        kinds = torch.zeros(batch, max_choices, dtype=torch.long, device=device)
+        mask = torch.zeros(batch, max_choices, dtype=torch.bool, device=device)
         for row, item in enumerate(items):
             n = item.candidate_features.shape[0]
             width = item.candidate_features.shape[-1]
@@ -119,8 +120,8 @@ class PPOTrainer:
             features[row, :n, :width] = item.candidate_features
             kinds[row, :n] = item.candidate_kinds
             mask[row, :n] = True
-        actions = torch.tensor([item.action_index for item in items], dtype=torch.long)
-        old_log_probs = torch.tensor([item.old_log_prob for item in items])
-        advantages = torch.tensor([item.advantage for item in items])
-        returns = torch.tensor([item.return_ for item in items])
+        actions = torch.tensor([item.action_index for item in items], dtype=torch.long, device=device)
+        old_log_probs = torch.tensor([item.old_log_prob for item in items], device=device)
+        advantages = torch.tensor([item.advantage for item in items], device=device)
+        returns = torch.tensor([item.return_ for item in items], device=device)
         return enc, seat, stage, features, kinds, mask, actions, old_log_probs, advantages, returns

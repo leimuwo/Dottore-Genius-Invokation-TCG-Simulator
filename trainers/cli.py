@@ -29,16 +29,20 @@ def main(argv=None) -> int:
     parser.add_argument("--rollout-steps", type=int, default=2048)
     parser.add_argument("--max-episode-steps", type=int, default=1000)
     parser.add_argument("--torch-threads", type=int, default=2)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args(argv)
     if args.steps <= 0:
         parser.error("--steps must be positive")
     if args.torch_threads <= 0:
         parser.error("--torch-threads must be positive")
     torch.set_num_threads(args.torch_threads)
+    if args.device == "cuda" and not torch.cuda.is_available():
+        parser.error("--device cuda requested but CUDA is unavailable")
+    device = torch.device(args.device)
     args.output.mkdir(parents=True, exist_ok=True)
     random.seed(args.seed)
     torch.manual_seed(args.seed)
-    model = PolicyValueNet(hidden_dim=args.hidden_dim)
+    model = PolicyValueNet(hidden_dim=args.hidden_dim).to(device)
     trainer = PPOTrainer(model, PPOConfig())
     env_factory = lambda: CardEnv(
         shaping=not args.no_shaping, shaping_lambda=args.shaping_lambda)
@@ -51,6 +55,7 @@ def main(argv=None) -> int:
         "python": platform.python_version(),
         "torch": torch.__version__,
         "cuda": torch.version.cuda,
+        "device": str(device),
         "seed": args.seed,
         "choice_steps": args.steps,
         "model": {"obs_dim": model.obs_dim, "feature_dim": model.feature_dim,

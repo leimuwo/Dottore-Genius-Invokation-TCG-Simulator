@@ -115,18 +115,18 @@ class PolicyValueNet(nn.Module):
             kinds[i] = self._kind_id(choice.kind)
         return enc, seat, stage, features, kinds
 
-    def distribution(self, obs: Obs) -> tuple[Tensor, Tensor, Tensor]:
+    def distribution(self, obs: Obs, device: torch.device | str | None = None) -> tuple[Tensor, Tensor, Tensor]:
         """Return logits, categorical probabilities and value for one Obs."""
-        tensors = self.tensors_for(obs)
+        tensors = self.tensors_for(obs, device=device)
         logits, value = self(*tensors)
         return logits, torch.softmax(logits, dim=-1), value
 
     @torch.no_grad()
     def act(self, obs: Obs, deterministic: bool = False,
             generator: torch.Generator | None = None
-            ) -> tuple[int, Tensor, Tensor, Tensor]:
+            , device: torch.device | str | None = None) -> tuple[int, Tensor, Tensor, Tensor]:
         """Choose a legal candidate and return index, log-prob, value, entropy."""
-        logits, probs, value = self.distribution(obs)
+        logits, probs, value = self.distribution(obs, device=device)
         dist = torch.distributions.Categorical(probs=probs)
         if deterministic:
             index = probs.argmax()
