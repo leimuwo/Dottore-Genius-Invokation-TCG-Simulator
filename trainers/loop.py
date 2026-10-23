@@ -37,6 +37,16 @@ def _items_from_episode(episode: Episode, gamma: float,
         by_seat.setdefault(transition.seat, []).append(transition)
     result: list[PPOItem] = []
     for transitions in by_seat.values():
+        terminal = bool(episode.transitions[-1].done)
+        terminal_rewards = episode.transitions[-1].rewards if terminal else None
+        rewards = [x.rewards[x.seat] for x in transitions]
+        dones = [x.done for x in transitions]
+        # A terminal engine step is observed by the acting seat only.  The
+        # opponent's trajectory must nevertheless end at the same payoff;
+        # otherwise that seat receives no learning signal for the game result.
+        if terminal and terminal_rewards is not None:
+            rewards[-1] = terminal_rewards[transitions[-1].seat]
+            dones[-1] = True
         next_value = 0.0
         if episode.bootstrap_obs is not None and transitions[-1].seat is episode.bootstrap_obs.seat:
             if model is None:
@@ -44,8 +54,7 @@ def _items_from_episode(episode: Episode, gamma: float,
             with torch.no_grad():
                 next_value = float(model.distribution(episode.bootstrap_obs, device=next(model.parameters()).device)[2])
         gae = compute_gae(
-            [x.rewards[x.seat] for x in transitions], [x.value for x in transitions],
-            [x.done for x in transitions], gamma=gamma,
+            rewards, [x.value for x in transitions], dones, gamma=gamma,
             gae_lambda=gae_lambda, next_value=next_value, normalize=False)
         for transition, advantage, return_ in zip(
                 transitions, gae.advantages, gae.returns):
