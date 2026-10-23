@@ -30,11 +30,14 @@ def main(argv=None) -> int:
     parser.add_argument("--max-episode-steps", type=int, default=1000)
     parser.add_argument("--torch-threads", type=int, default=2)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--env-workers", type=int, default=1)
     args = parser.parse_args(argv)
     if args.steps <= 0:
         parser.error("--steps must be positive")
     if args.torch_threads <= 0:
         parser.error("--torch-threads must be positive")
+    if args.env_workers <= 0:
+        parser.error("--env-workers must be positive")
     torch.set_num_threads(args.torch_threads)
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("--device cuda requested but CUDA is unavailable")
@@ -49,7 +52,8 @@ def main(argv=None) -> int:
     result = train_steps(model, trainer, steps=args.steps, seed=args.seed,
                          env_factory=env_factory,
                          rollout_steps=args.rollout_steps,
-                         max_episode_steps=args.max_episode_steps)
+                         max_episode_steps=args.max_episode_steps,
+                         env_workers=args.env_workers)
     manifest = {
         "created_at": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(),
