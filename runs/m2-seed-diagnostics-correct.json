@@ -1,0 +1,247 @@
+{
+  "seed0_P1": {
+    "games": 27,
+    "wins": 22,
+    "reasons": {
+      "kill:P1": 22,
+      "timeout": 5
+    },
+    "choice_steps_mean": 893.0370370370371,
+    "commits_mean": 156.59259259259258,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "3": 27,
+      "SELECT_DICE": 361,
+      "PLAY_CARD": 720,
+      "CAST_SKILL": 421,
+      "END_ROUND": 324,
+      "SWAP_CHARACTER": 595
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2078,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 361,
+      "PLAY_CARD": 720,
+      "CAST_SKILL": 1015,
+      "SWAP_CHARACTER": 1736,
+      "ELEMENTAL_TUNING": 1485
+    },
+    "model_choice_kinds": {
+      "tuple": 4656,
+      "card_count": 108,
+      "commit": 2475,
+      "dice_count": 1796,
+      "cost_count": 5489
+    },
+    "nontrivial_entropy_mean": 0.9400180022205509,
+    "nontrivial_maxprob_mean": 0.4162988090836771
+  },
+  "seed0_P2": {
+    "games": 27,
+    "wins": 24,
+    "reasons": {
+      "kill:P2": 24,
+      "timeout": 3
+    },
+    "choice_steps_mean": 915.4444444444445,
+    "commits_mean": 158.44444444444446,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "3": 27,
+      "SELECT_DICE": 364,
+      "PLAY_CARD": 737,
+      "CAST_SKILL": 432,
+      "END_ROUND": 322,
+      "SWAP_CHARACTER": 546,
+      "ELEMENTAL_TUNING": 1
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2055,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 364,
+      "PLAY_CARD": 737,
+      "CAST_SKILL": 1079,
+      "SWAP_CHARACTER": 1709,
+      "ELEMENTAL_TUNING": 1429
+    },
+    "model_choice_kinds": {
+      "tuple": 4619,
+      "card_count": 108,
+      "commit": 2456,
+      "dice_count": 1877,
+      "cost_count": 5894
+    },
+    "nontrivial_entropy_mean": 0.9370432394390473,
+    "nontrivial_maxprob_mean": 0.41649412140868264
+  },
+  "seed1_P1": {
+    "games": 27,
+    "wins": 15,
+    "reasons": {
+      "kill:P1": 15,
+      "timeout": 10,
+      "kill:P2": 2
+    },
+    "choice_steps_mean": 1120.5185185185185,
+    "commits_mean": 190.85185185185185,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "3": 27,
+      "SELECT_DICE": 556,
+      "PLAY_CARD": 762,
+      "SWAP_CHARACTER": 942,
+      "CAST_SKILL": 388,
+      "END_ROUND": 377,
+      "ELEMENTAL_TUNING": 5
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2488,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 556,
+      "PLAY_CARD": 762,
+      "CAST_SKILL": 924,
+      "SWAP_CHARACTER": 2064,
+      "ELEMENTAL_TUNING": 1962
+    },
+    "model_choice_kinds": {
+      "tuple": 5655,
+      "card_count": 108,
+      "commit": 3084,
+      "dice_count": 2901,
+      "cost_count": 7130
+    },
+    "nontrivial_entropy_mean": 0.9365607315818538,
+    "nontrivial_maxprob_mean": 0.41555785860101313
+  },
+  "seed1_P2": {
+    "games": 27,
+    "wins": 10,
+    "reasons": {
+      "timeout": 16,
+      "kill:P2": 10,
+      "kill:P1": 1
+    },
+    "choice_steps_mean": 1123.5555555555557,
+    "commits_mean": 192.37037037037038,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "3": 27,
+      "SELECT_DICE": 579,
+      "PLAY_CARD": 759,
+      "SWAP_CHARACTER": 912,
+      "END_ROUND": 382,
+      "CAST_SKILL": 404,
+      "ELEMENTAL_TUNING": 6
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2475,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 579,
+      "PLAY_CARD": 759,
+      "CAST_SKILL": 937,
+      "SWAP_CHARACTER": 2056,
+      "ELEMENTAL_TUNING": 1778
+    },
+    "model_choice_kinds": {
+      "tuple": 5639,
+      "card_count": 108,
+      "commit": 3096,
+      "dice_count": 2945,
+      "cost_count": 6906
+    },
+    "nontrivial_entropy_mean": 0.9409071618548621,
+    "nontrivial_maxprob_mean": 0.4135156086121807
+  },
+  "seed2_P1": {
+    "games": 27,
+    "wins": 23,
+    "reasons": {
+      "kill:P1": 23,
+      "timeout": 4
+    },
+    "choice_steps_mean": 929.3703703703703,
+    "commits_mean": 160.5185185185185,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "1": 27,
+      "SELECT_DICE": 367,
+      "PLAY_CARD": 762,
+      "CAST_SKILL": 401,
+      "SWAP_CHARACTER": 565,
+      "END_ROUND": 324
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2069,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 367,
+      "PLAY_CARD": 762,
+      "CAST_SKILL": 1001,
+      "SWAP_CHARACTER": 1726,
+      "ELEMENTAL_TUNING": 1438
+    },
+    "model_choice_kinds": {
+      "tuple": 4671,
+      "card_count": 108,
+      "commit": 2473,
+      "dice_count": 1878,
+      "cost_count": 5719
+    },
+    "nontrivial_entropy_mean": 0.9478476737828585,
+    "nontrivial_maxprob_mean": 0.41506798351828744
+  },
+  "seed2_P2": {
+    "games": 27,
+    "wins": 22,
+    "reasons": {
+      "timeout": 5,
+      "kill:P2": 22
+    },
+    "choice_steps_mean": 950.7037037037037,
+    "commits_mean": 163.33333333333334,
+    "first_choice_actions": {
+      "SELECT_CARDS": 27,
+      "1": 27,
+      "SELECT_DICE": 380,
+      "PLAY_CARD": 759,
+      "END_ROUND": 336,
+      "SWAP_CHARACTER": 563,
+      "CAST_SKILL": 446
+    },
+    "first_choice_opportunities": {
+      "SELECT_CARDS": 27,
+      "END_ROUND": 2127,
+      "1": 27,
+      "2": 27,
+      "3": 27,
+      "SELECT_DICE": 380,
+      "PLAY_CARD": 759,
+      "CAST_SKILL": 1051,
+      "SWAP_CHARACTER": 1767,
+      "ELEMENTAL_TUNING": 1440
+    },
+    "model_choice_kinds": {
+      "tuple": 4757,
+      "card_count": 108,
+      "commit": 2538,
+      "dice_count": 1903,
+      "cost_count": 5956
+    },
+    "nontrivial_entropy_mean": 0.9424279998584162,
+    "nontrivial_maxprob_mean": 0.41842919764234304
+  }
+}
