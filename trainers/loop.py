@@ -6,6 +6,7 @@ import time
 from typing import Callable
 
 import torch
+from .evaluate import load_decks
 
 from dgisim_ext.env_api import CardEnv
 from .gae import compute_gae
@@ -80,12 +81,17 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 gae_lambda: float = 0.95,
                 env_factory: Callable[[], CardEnv] = CardEnv,
                 rollout_steps: int = 2048,
-                max_episode_steps: int = 1000) -> TrainResult:
+                max_episode_steps: int = 1000,
+                training_decks=None) -> TrainResult:
     """Run PPO updates on fixed-size rollout batches."""
     if steps <= 0:
         raise ValueError("steps must be positive")
     if rollout_steps <= 0 or max_episode_steps <= 0:
         raise ValueError("rollout_steps and max_episode_steps must be positive")
+    if training_decks is None:
+        training_decks = load_decks("decks/train")
+    if len(training_decks) < 2:
+        raise ValueError("training_decks must contain at least two decks")
     device = next(model.parameters()).device
     generator = torch.Generator(device=device).manual_seed(seed)
     policy = model_decision(model, generator=generator, device=device)
@@ -133,7 +139,9 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         start = time.perf_counter()
         episode = collect_episode(
             env, game_seed, policy,
-            max_steps=min(max_episode_steps, steps - count), allow_truncated=True)
+            max_steps=min(max_episode_steps, steps - count), allow_truncated=True,
+            deck_p1=training_decks[game_seed % len(training_decks)][1],
+            deck_p2=training_decks[(game_seed // len(training_decks) + 1) % len(training_decks)][1])
         remaining = steps - count
         if len(episode.transitions) > remaining:
             episode.transitions = episode.transitions[:remaining]

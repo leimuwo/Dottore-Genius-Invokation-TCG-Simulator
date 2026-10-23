@@ -90,10 +90,11 @@ def model_decision(model, *, generator: torch.Generator | None = None,
 
 
 def collect_episode(env: CardEnv, seed: int, policy: Policy,
-                    *, max_steps: int = 10000, allow_truncated: bool = False) -> Episode:
+                    *, max_steps: int = 10000, allow_truncated: bool = False,
+                    deck_p1=None, deck_p2=None) -> Episode:
     episode = Episode(seed=seed)
     try:
-        obs = env.reset(seed=seed)
+        obs = env.reset(deck_p1, deck_p2, seed)
         for _ in range(max_steps):
             if not obs.choices:
                 raise CardEnvError("exception", "observation has no choices")
