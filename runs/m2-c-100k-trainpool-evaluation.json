@@ -1,0 +1,170 @@
+{
+  "trainpool100_seed0_P1": {
+    "games": 27,
+    "wins": 0,
+    "kills": 0,
+    "timeouts": 27,
+    "payoff_p1": -27.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.0,
+      0.12455502974186705
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 27,
+        "kills": 0,
+        "timeouts": 27,
+        "payoff": -27.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "trainpool100_seed0_P2": {
+    "games": 27,
+    "wins": 0,
+    "kills": 0,
+    "timeouts": 27,
+    "payoff_p1": -27.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.0,
+      0.12455502974186705
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 27,
+        "kills": 0,
+        "timeouts": 27,
+        "payoff": -27.0
+      }
+    }
+  },
+  "trainpool100_seed1_P1": {
+    "games": 27,
+    "wins": 23,
+    "kills": 23,
+    "timeouts": 4,
+    "payoff_p1": 19.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.6752131457218702,
+      0.9408407222375568
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 23,
+        "games": 27,
+        "kills": 23,
+        "timeouts": 4,
+        "payoff": 19.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "trainpool100_seed1_P2": {
+    "games": 27,
+    "wins": 25,
+    "kills": 25,
+    "timeouts": 2,
+    "payoff_p1": -27.0,
+    "payoff_p2": 23.0,
+    "winrate_ci95": [
+      0.7663040731697686,
+      0.9794453459390113
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 25,
+        "games": 27,
+        "kills": 25,
+        "timeouts": 2,
+        "payoff": 23.0
+      }
+    }
+  },
+  "trainpool100_seed2_P1": {
+    "games": 27,
+    "wins": 0,
+    "kills": 2,
+    "timeouts": 25,
+    "payoff_p1": -27.0,
+    "payoff_p2": -23.0,
+    "winrate_ci95": [
+      0.0,
+      0.12455502974186705
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 27,
+        "kills": 2,
+        "timeouts": 25,
+        "payoff": -27.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      }
+    }
+  },
+  "trainpool100_seed2_P2": {
+    "games": 27,
+    "wins": 0,
+    "kills": 1,
+    "timeouts": 26,
+    "payoff_p1": -25.0,
+    "payoff_p2": -27.0,
+    "winrate_ci95": [
+      0.0,
+      0.12455502974186705
+    ],
+    "by_seat": {
+      "P1": {
+        "wins": 0,
+        "games": 0,
+        "kills": 0,
+        "timeouts": 0,
+        "payoff": 0.0
+      },
+      "P2": {
+        "wins": 0,
+        "games": 27,
+        "kills": 1,
+        "timeouts": 26,
+        "payoff": -27.0
+      }
+    }
+  }
+}
