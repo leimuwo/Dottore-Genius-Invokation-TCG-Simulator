@@ -35,6 +35,7 @@ class Transition:
     candidate_features: tuple[tuple[float, ...], ...]
     candidate_kinds: tuple[str, ...]
     action_index: int
+    action_label: str
     log_prob: float
     value: float
     entropy: float
@@ -109,6 +110,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 candidate_features=tuple(c.feature for c in obs.choices),
                 candidate_kinds=tuple(c.kind for c in obs.choices),
                 action_index=decision.action_index,
+                action_label=choice.label,
                 log_prob=decision.log_prob,
                 value=decision.value,
                 entropy=decision.entropy,

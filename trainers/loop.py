@@ -95,6 +95,9 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     pending: list[PPOItem] = []
     valid_episodes = failed_episodes = updates = 0
     metric_totals: dict[str, float] = {}
+    action_counts = {"swap": 0, "skill": 0, "commit": 0}
+    terminal_counts = {"kill": 0, "timeout": 0}
+    episode_lengths: list[int] = []
     batch_sizes: list[int] = []
     timings = {"sampling": 0.0, "gae": 0.0, "ppo_update": 0.0}
 
@@ -138,6 +141,19 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         timings["sampling"] += time.perf_counter() - start
         if episode.valid:
             valid_episodes += 1
+            episode_lengths.append(len(episode.transitions))
+            for transition in episode.transitions:
+                label = transition.action_label
+                if label == "SWAP_CHARACTER":
+                    action_counts["swap"] += 1
+                elif label == "CAST_SKILL":
+                    action_counts["skill"] += 1
+                if label == "COMMIT":
+                    action_counts["commit"] += 1
+            if episode.terminal_reason == "timeout":
+                terminal_counts["timeout"] += 1
+            elif episode.terminal_reason and episode.terminal_reason.startswith("kill:"):
+                terminal_counts["kill"] += 1
             start = time.perf_counter()
             pending.extend(_items_from_episode(episode, gamma, gae_lambda, model))
             timings["gae"] += time.perf_counter() - start
@@ -151,5 +167,15 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     flush_batch()
     metrics = ({key: value / updates for key, value in metric_totals.items()}
                if updates else {})
+    total_transitions = max(1, sum(action_counts.values()))
+    metrics.update({
+        "swap_rate": action_counts["swap"] / total_transitions,
+        "skill_rate": action_counts["skill"] / total_transitions,
+        "commit_rate": action_counts["commit"] / total_transitions,
+        "timeout_rate": terminal_counts["timeout"] / max(1, valid_episodes),
+        "kill_rate": terminal_counts["kill"] / max(1, valid_episodes),
+        "episode_length_mean": (sum(episode_lengths) / len(episode_lengths)
+                                if episode_lengths else 0.0),
+    })
     return TrainResult(count, valid_episodes, failed_episodes, updates, metrics,
                        timings, tuple(batch_sizes))
