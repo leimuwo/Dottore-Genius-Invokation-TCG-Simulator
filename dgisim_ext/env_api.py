@@ -289,28 +289,31 @@ class CardEnv:
         """内容特征：只依赖候选项本身，不依赖它在列表里的位置。"""
         if kind == KIND_TUPLE:
             if isinstance(payload, (type, Enum)):
-                return (float(self._plan.encode_item(payload)), 1.0)
+                code = float(self._plan.encode_item(payload))
+                return (code, 1.0, float(getattr(payload, "value", code)), 1.0)
             if isinstance(payload, int):
-                return (float(payload), 1.0)
+                return (float(payload), 1.0, float(payload), 1.0)
             # StaticTarget and similar engine dataclasses encode their contents.
-            return tuple(float(v) for v in payload.encoding(self._plan)) + (1.0,)
+            encoded = tuple(float(v) for v in payload.encoding(self._plan))
+            return (encoded[0] if encoded else 0.0,
+                    encoded[1] if len(encoded) > 1 else 0.0, 0.0, 1.0)
         if kind == KIND_CARD:
             (card,) = payload.ordered_cards[:1]
-            return (float(self._plan.encode_item(card)), 2.0)
+            return (float(self._plan.encode_item(card)), 1.0, 0.0, 2.0)
         if kind == KIND_DICE:
             counts = payload.readonly_dice_collection_ordered()
             return (float(sum(counts.values())),
-                    float(sum(e.value * n for e, n in counts.items())), 3.0)
+                    float(sum(e.value * n for e, n in counts.items())), 0.0, 3.0)
         if kind == KIND_COST:
-            return (0.0, 0.0, 4.0)
-        return (0.0, 0.0, 5.0)
+            return (0.0, 0.0, 0.0, 4.0)
+        return (0.0, 0.0, 0.0, 5.0)
 
     def _choices(self) -> tuple[Choice, ...]:
         assert self._gen is not None
         if self._choices_cache is not None:
             return self._choices_cache
         if self._gen.filled():
-            self._choices_cache = (Choice(KIND_COMMIT, None, (0.0, 0.0, 5.0)),)
+            self._choices_cache = (Choice(KIND_COMMIT, None, (0.0, 0.0, 0.0, 5.0)),)
             return self._choices_cache
         if self._selection is not None:
             return self._selection_choices()
@@ -345,7 +348,7 @@ class CardEnv:
         code = self._plan.encode_item(item)
         kind_code = {'dice': 3.0, 'card': 2.0, 'cost': 4.0}[selection.kind]
         self._choices_cache = tuple(
-            Choice(selection.kind + '_count', (item, n), (float(code), float(n), kind_code))
+            Choice(selection.kind + '_count', (item, n), (float(code), float(n), 0.0, kind_code))
             for n in selection.counts())
         if not self._choices_cache:
             self._fail('illegal', 'no legal selection completion')
