@@ -37,7 +37,7 @@ class TrainResult:
     valid_episodes: int
     failed_episodes: int
     updates: int
-    metrics: dict[str, float]
+    metrics: dict[str, object]
     timings: dict[str, float]
     batch_sizes: tuple[int, ...]
 
@@ -122,8 +122,11 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     valid_episodes = failed_episodes = updates = 0
     metric_totals: dict[str, float] = {}
     action_counts = {"swap": 0, "skill": 0, "commit": 0}
-    terminal_counts = {"kill": 0, "timeout": 0}
+    terminal_counts = {"kill": 0, "timeout": 0, "truncated": 0}
     episode_lengths: list[int] = []
+    episode_commits: list[int] = []
+    truncated_summaries: list[dict] = []
+    truncated_tail_actions: list[tuple[dict, ...]] = []
     batch_sizes: list[int] = []
     timings = {"sampling": 0.0, "gae": 0.0, "ppo_update": 0.0}
     pool = None
@@ -191,6 +194,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
             if episode.valid:
                 valid_episodes += 1
                 episode_lengths.append(len(episode.transitions))
+                episode_commits.append(sum(t.action_label == "COMMIT" for t in episode.transitions))
                 for transition in episode.transitions:
                     label = transition.action_label
                     if label == "SWAP_CHARACTER": action_counts["swap"] += 1
@@ -199,6 +203,11 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 if episode.terminal_reason == "timeout": terminal_counts["timeout"] += 1
                 elif episode.terminal_reason and episode.terminal_reason.startswith("kill:"):
                     terminal_counts["kill"] += 1
+                elif episode.terminal_reason is None:
+                    terminal_counts["truncated"] += 1
+                    if episode.final_summary is not None:
+                        truncated_summaries.append(episode.final_summary)
+                    truncated_tail_actions.append(episode.tail_actions)
                 start_gae = time.perf_counter()
                 pending.extend(_items_from_episode(episode, gamma, gae_lambda, model))
                 timings["gae"] += time.perf_counter() - start_gae
@@ -222,9 +231,22 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         "skill_rate": action_counts["skill"] / total_transitions,
         "commit_rate": action_counts["commit"] / total_transitions,
         "timeout_rate": terminal_counts["timeout"] / max(1, valid_episodes),
+        "engine_timeout_rate": terminal_counts["timeout"] / max(1, valid_episodes),
         "kill_rate": terminal_counts["kill"] / max(1, valid_episodes),
+        "truncated_rate": terminal_counts["truncated"] / max(1, valid_episodes),
         "episode_length_mean": (sum(episode_lengths) / len(episode_lengths)
                                 if episode_lengths else 0.0),
+        "commit_count_mean": (sum(episode_commits) / len(episode_commits)
+                              if episode_commits else 0.0),
     })
+    metrics["truncated_final_summary_count"] = float(len(truncated_summaries))
+    metrics["truncated_final_alive_mean"] = (
+        sum(s["P1"]["alive"] + s["P2"]["alive"] for s in truncated_summaries)
+        / len(truncated_summaries) if truncated_summaries else 0.0)
+    metrics["truncated_final_hp_mean"] = (
+        sum(s["P1"]["hp"] + s["P2"]["hp"] for s in truncated_summaries)
+        / len(truncated_summaries) if truncated_summaries else 0.0)
+    # Kept in the manifest as structured diagnostics for the truncation study.
+    metrics["truncated_tail_actions"] = truncated_tail_actions
     return TrainResult(count, valid_episodes, failed_episodes, updates, metrics,
                        timings, tuple(batch_sizes))

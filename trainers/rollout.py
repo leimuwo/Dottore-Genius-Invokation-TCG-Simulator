@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import math
 import random
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable, Protocol
 
@@ -53,6 +54,8 @@ class Episode:
     failure: dict | None = None
     terminal_reason: str | None = None
     bootstrap_obs: Obs | None = None
+    final_summary: dict | None = None
+    tail_actions: tuple[dict, ...] = ()
 
 
 class Policy(Protocol):
@@ -93,6 +96,8 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                     *, max_steps: int = 10000, allow_truncated: bool = False,
                     deck_p1=None, deck_p2=None) -> Episode:
     episode = Episode(seed=seed)
+    commit_tail: deque[dict] = deque(maxlen=20)
+    action_block_length = 0
     try:
         obs = env.reset(deck_p1, deck_p2, seed)
         for _ in range(max_steps):
@@ -103,6 +108,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 raise CardEnvError("illegal", "policy returned invalid choice")
             choice = obs.choices[decision.action_index]
             out = env.step(decision.action_index)
+            action_block_length += 1
             episode.transitions.append(Transition(
                 obs_fingerprint=obs_fingerprint(obs),
                 enc=obs.enc,
@@ -120,24 +126,49 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 done=out.done,
                 terminal_reason=out.terminal_reason,
             ))
+            if choice.label == "COMMIT":
+                commit_tail.append({
+                    "seat": obs.seat.name,
+                    "label": choice.label,
+                    "stage_index": obs.stage_index,
+                    "block_length": action_block_length,
+                })
+                action_block_length = 0
             if out.done:
                 episode.terminal_reason = out.terminal_reason
+                episode.final_summary = _summary(env)
+                episode.tail_actions = tuple(commit_tail)
                 return episode
             if out.obs is None:
                 raise CardEnvError("exception", "non-terminal step returned no obs")
             obs = out.obs
         if allow_truncated:
             episode.bootstrap_obs = obs
+            episode.final_summary = _summary(env)
+            episode.tail_actions = tuple(commit_tail)
             return episode
         raise CardEnvError("noop", f"rollout exceeded {max_steps} steps")
     except CardEnvError as exc:
         episode.valid = False
         episode.failure = {"category": exc.category, "message": str(exc)}
         return episode
+
     except Exception as exc:  # diagnostics must not enter a PPO batch
         episode.valid = False
         episode.failure = {"category": "exception", "message": f"{type(exc).__name__}: {exc}"}
         return episode
+
+
+def _summary(env: CardEnv) -> dict:
+    summary = {}
+    for pid in Pid.P1, Pid.P2:
+        chars = env.state.get_player(pid).characters.get_characters()
+        summary[pid.name] = {
+            "alive": sum(c.alive for c in chars),
+            "hp": sum(max(0, c.hp) for c in chars),
+            "hps": [c.hp for c in chars],
+        }
+    return summary
 
 
 def collect_rollout(env_factory: Callable[[], CardEnv], seeds: list[int],
