@@ -112,7 +112,8 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 env_factory: Callable[[], CardEnv] = CardEnv,
                 rollout_steps: int = 2048,
                 max_episode_steps: int = 1000,
-                training_decks=None, env_workers: int = 1) -> TrainResult:
+                training_decks=None, env_workers: int = 1,
+                checkpoint_callback=None) -> TrainResult:
     """Run PPO updates on fixed-size rollout batches."""
     if steps <= 0:
         raise ValueError("steps must be positive")
@@ -219,6 +220,8 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 failed_episodes += 1
             if len(pending) >= rollout_steps:
                 flush_batch()
+            if checkpoint_callback is not None:
+                checkpoint_callback(count, model, trainer)
         game_seed += len(episodes)
         timings["sampling"] += time.perf_counter() - start
     finally:
