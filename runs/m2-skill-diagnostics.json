@@ -1,0 +1,996 @@
+{
+  "seed0_P1": {
+    "skills": {
+      "skill_actions": 218,
+      "damage_actions": 51,
+      "zero_damage": 167,
+      "kills": 0,
+      "damage_total": 73,
+      "dice_spent": 165
+    },
+    "action_outcomes": {
+      "no_enemy_damage": [
+        167,
+        0,
+        0,
+        12
+      ],
+      "enemy_damage": [
+        51,
+        73,
+        0,
+        153
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:ANEMO=0",
+        65
+      ],
+      [
+        "cost_count:OMNI=1",
+        64
+      ],
+      [
+        "cost_count:DENDRO=0",
+        61
+      ],
+      [
+        "cost_count:HYDRO=1",
+        59
+      ],
+      [
+        "cost_count:CRYO=0",
+        56
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        54
+      ],
+      [
+        "cost_count:GEO=0",
+        52
+      ],
+      [
+        "cost_count:PYRO=1",
+        50
+      ],
+      [
+        "cost_count:ANEMO=1",
+        47
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        45
+      ],
+      [
+        "cost_count:HYDRO=0",
+        44
+      ],
+      [
+        "cost_count:DENDRO=1",
+        43
+      ],
+      [
+        "cost_count:GEO=1",
+        43
+      ],
+      [
+        "cost_count:PYRO=0",
+        36
+      ],
+      [
+        "cost_count:CRYO=1",
+        28
+      ],
+      [
+        "cost_count:OMNI=0",
+        25
+      ],
+      [
+        "cost_count:PYRO=2",
+        25
+      ],
+      [
+        "cost_count:OMNI=2",
+        20
+      ],
+      [
+        "cost_count:GEO=2",
+        15
+      ],
+      [
+        "cost_count:OMNI=3",
+        15
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        7
+      ],
+      [
+        "cost_count:HYDRO=2",
+        7
+      ],
+      [
+        "cost_count:CRYO=2",
+        6
+      ],
+      [
+        "cost_count:PYRO=3",
+        6
+      ],
+      [
+        "cost_count:ANEMO=2",
+        5
+      ],
+      [
+        "cost_count:ANEMO=3",
+        5
+      ],
+      [
+        "cost_count:HYDRO=3",
+        2
+      ],
+      [
+        "cost_count:DENDRO=2",
+        2
+      ],
+      [
+        "cost_count:GEO=3",
+        2
+      ],
+      [
+        "cost_count:HYDRO=4",
+        1
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 75,
+      "(5, 4)": 8,
+      "(4, 4)": 3,
+      "(3, 4)": 5,
+      "(4, 5)": 29,
+      "(5, 6)": 24,
+      "(3, 5)": 15,
+      "(4, 6)": 11,
+      "(6, 5)": 30,
+      "(2, 5)": 4,
+      "(1, 5)": 1,
+      "(6, 6)": 13
+    }
+  },
+  "seed0_P2": {
+    "skills": {
+      "skill_actions": 292,
+      "damage_actions": 107,
+      "zero_damage": 185,
+      "kills": 1,
+      "damage_total": 158,
+      "dice_spent": 330
+    },
+    "action_outcomes": {
+      "no_enemy_damage": [
+        185,
+        0,
+        0,
+        9
+      ],
+      "enemy_damage": [
+        107,
+        158,
+        1,
+        321
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:OMNI=1",
+        105
+      ],
+      [
+        "cost_count:CRYO=0",
+        74
+      ],
+      [
+        "cost_count:HYDRO=1",
+        71
+      ],
+      [
+        "cost_count:ANEMO=0",
+        64
+      ],
+      [
+        "cost_count:PYRO=1",
+        62
+      ],
+      [
+        "cost_count:ANEMO=1",
+        61
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        61
+      ],
+      [
+        "cost_count:DENDRO=0",
+        60
+      ],
+      [
+        "cost_count:GEO=0",
+        59
+      ],
+      [
+        "cost_count:PYRO=0",
+        58
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        58
+      ],
+      [
+        "cost_count:OMNI=2",
+        54
+      ],
+      [
+        "cost_count:PYRO=2",
+        47
+      ],
+      [
+        "cost_count:HYDRO=0",
+        45
+      ],
+      [
+        "cost_count:DENDRO=1",
+        42
+      ],
+      [
+        "cost_count:GEO=1",
+        37
+      ],
+      [
+        "cost_count:OMNI=0",
+        36
+      ],
+      [
+        "cost_count:CRYO=1",
+        31
+      ],
+      [
+        "cost_count:OMNI=3",
+        23
+      ],
+      [
+        "cost_count:HYDRO=2",
+        10
+      ],
+      [
+        "cost_count:PYRO=3",
+        9
+      ],
+      [
+        "cost_count:GEO=2",
+        9
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        6
+      ],
+      [
+        "cost_count:GEO=3",
+        5
+      ],
+      [
+        "cost_count:CRYO=2",
+        4
+      ],
+      [
+        "cost_count:ANEMO=2",
+        4
+      ],
+      [
+        "cost_count:DENDRO=2",
+        4
+      ],
+      [
+        "cost_count:HYDRO=4",
+        2
+      ],
+      [
+        "cost_count:HYDRO=3",
+        2
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 89,
+      "(4, 5)": 29,
+      "(4, 4)": 15,
+      "(3, 5)": 10,
+      "(2, 5)": 6,
+      "(1, 5)": 2,
+      "(6, 5)": 49,
+      "(5, 4)": 24,
+      "(5, 3)": 9,
+      "(4, 3)": 6,
+      "(3, 3)": 2,
+      "(2, 3)": 1,
+      "(1, 3)": 1,
+      "(5, 6)": 13,
+      "(4, 6)": 3,
+      "(3, 6)": 5,
+      "(6, 6)": 17,
+      "(6, 4)": 7,
+      "(3, 4)": 2,
+      "(6, 3)": 2
+    }
+  },
+  "seed1_P1": {
+    "skills": {
+      "skill_actions": 640,
+      "damage_actions": 411,
+      "zero_damage": 229,
+      "kills": 76,
+      "damage_total": 862,
+      "dice_spent": 1191
+    },
+    "action_outcomes": {
+      "enemy_damage": [
+        411,
+        862,
+        76,
+        1140
+      ],
+      "no_enemy_damage": [
+        229,
+        0,
+        0,
+        51
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:OMNI=1",
+        224
+      ],
+      [
+        "cost_count:PYRO=0",
+        179
+      ],
+      [
+        "cost_count:HYDRO=1",
+        173
+      ],
+      [
+        "cost_count:ANEMO=1",
+        147
+      ],
+      [
+        "cost_count:OMNI=0",
+        146
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        130
+      ],
+      [
+        "cost_count:ANEMO=0",
+        120
+      ],
+      [
+        "cost_count:PYRO=1",
+        119
+      ],
+      [
+        "cost_count:HYDRO=0",
+        119
+      ],
+      [
+        "cost_count:DENDRO=1",
+        116
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        113
+      ],
+      [
+        "cost_count:CRYO=1",
+        104
+      ],
+      [
+        "cost_count:GEO=1",
+        100
+      ],
+      [
+        "cost_count:DENDRO=0",
+        97
+      ],
+      [
+        "cost_count:CRYO=0",
+        90
+      ],
+      [
+        "cost_count:GEO=0",
+        74
+      ],
+      [
+        "cost_count:PYRO=2",
+        71
+      ],
+      [
+        "cost_count:OMNI=2",
+        48
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        43
+      ],
+      [
+        "cost_count:HYDRO=2",
+        32
+      ],
+      [
+        "cost_count:GEO=2",
+        31
+      ],
+      [
+        "cost_count:ANEMO=2",
+        22
+      ],
+      [
+        "cost_count:OMNI=3",
+        14
+      ],
+      [
+        "cost_count:CRYO=2",
+        14
+      ],
+      [
+        "cost_count:GEO=3",
+        12
+      ],
+      [
+        "cost_count:DENDRO=2",
+        11
+      ],
+      [
+        "cost_count:PYRO=3",
+        8
+      ],
+      [
+        "cost_count:HYDRO=3",
+        6
+      ],
+      [
+        "cost_count:ANEMO=3",
+        6
+      ],
+      [
+        "cost_count:ELECTRO=3",
+        3
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 76,
+      "(4, 5)": 9,
+      "(4, 4)": 35,
+      "(3, 4)": 6,
+      "(3, 3)": 18,
+      "(4, 2)": 37,
+      "(4, 1)": 26,
+      "(3, 1)": 24,
+      "(3, 0)": 12,
+      "(5, 4)": 70,
+      "(5, 3)": 29,
+      "(4, 3)": 41,
+      "(3, 2)": 21,
+      "(2, 2)": 4,
+      "(2, 1)": 14,
+      "(2, 0)": 8,
+      "(5, 2)": 37,
+      "(5, 6)": 18,
+      "(5, 1)": 41,
+      "(4, 0)": 10,
+      "(5, 0)": 18,
+      "(1, 1)": 6,
+      "(1, 0)": 5,
+      "(6, 5)": 28,
+      "(6, 4)": 5,
+      "(6, 3)": 5,
+      "(6, 2)": 9,
+      "(6, 1)": 10,
+      "(6, 6)": 14,
+      "(2, 4)": 1,
+      "(2, 3)": 2,
+      "(6, 0)": 1
+    }
+  },
+  "seed1_P2": {
+    "skills": {
+      "skill_actions": 635,
+      "damage_actions": 418,
+      "zero_damage": 217,
+      "kills": 77,
+      "damage_total": 827,
+      "dice_spent": 1230
+    },
+    "action_outcomes": {
+      "no_enemy_damage": [
+        217,
+        0,
+        0,
+        92
+      ],
+      "enemy_damage": [
+        418,
+        827,
+        77,
+        1138
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:OMNI=1",
+        218
+      ],
+      [
+        "cost_count:PYRO=0",
+        180
+      ],
+      [
+        "cost_count:ANEMO=0",
+        158
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        148
+      ],
+      [
+        "cost_count:HYDRO=1",
+        148
+      ],
+      [
+        "cost_count:ANEMO=1",
+        146
+      ],
+      [
+        "cost_count:PYRO=1",
+        142
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        140
+      ],
+      [
+        "cost_count:DENDRO=1",
+        134
+      ],
+      [
+        "cost_count:OMNI=0",
+        134
+      ],
+      [
+        "cost_count:DENDRO=0",
+        116
+      ],
+      [
+        "cost_count:HYDRO=0",
+        114
+      ],
+      [
+        "cost_count:GEO=1",
+        101
+      ],
+      [
+        "cost_count:CRYO=1",
+        97
+      ],
+      [
+        "cost_count:CRYO=0",
+        81
+      ],
+      [
+        "cost_count:GEO=2",
+        52
+      ],
+      [
+        "cost_count:GEO=0",
+        50
+      ],
+      [
+        "cost_count:PYRO=2",
+        43
+      ],
+      [
+        "cost_count:OMNI=2",
+        41
+      ],
+      [
+        "cost_count:OMNI=3",
+        33
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        29
+      ],
+      [
+        "cost_count:CRYO=2",
+        20
+      ],
+      [
+        "cost_count:HYDRO=2",
+        19
+      ],
+      [
+        "cost_count:DENDRO=2",
+        18
+      ],
+      [
+        "cost_count:ANEMO=2",
+        16
+      ],
+      [
+        "cost_count:PYRO=3",
+        8
+      ],
+      [
+        "cost_count:ELECTRO=3",
+        3
+      ],
+      [
+        "cost_count:GEO=3",
+        3
+      ],
+      [
+        "cost_count:HYDRO=3",
+        2
+      ],
+      [
+        "cost_count:ANEMO=3",
+        1
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 123,
+      "(5, 4)": 70,
+      "(4, 4)": 18,
+      "(4, 3)": 26,
+      "(3, 3)": 13,
+      "(3, 2)": 16,
+      "(3, 1)": 17,
+      "(2, 1)": 12,
+      "(2, 0)": 8,
+      "(4, 2)": 13,
+      "(2, 2)": 6,
+      "(5, 3)": 45,
+      "(5, 2)": 34,
+      "(5, 1)": 43,
+      "(4, 1)": 21,
+      "(3, 0)": 17,
+      "(6, 5)": 37,
+      "(5, 0)": 18,
+      "(4, 5)": 12,
+      "(4, 0)": 16,
+      "(5, 6)": 24,
+      "(3, 4)": 3,
+      "(6, 6)": 14,
+      "(6, 4)": 8,
+      "(6, 3)": 6,
+      "(1, 0)": 5,
+      "(6, 2)": 2,
+      "(6, 1)": 6,
+      "(2, 3)": 2
+    }
+  },
+  "seed2_P1": {
+    "skills": {
+      "skill_actions": 219,
+      "damage_actions": 0,
+      "zero_damage": 219,
+      "kills": 0,
+      "damage_total": 0,
+      "dice_spent": 0
+    },
+    "action_outcomes": {
+      "no_enemy_damage": [
+        219,
+        0,
+        0,
+        0
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:CRYO=0",
+        86
+      ],
+      [
+        "cost_count:DENDRO=0",
+        79
+      ],
+      [
+        "cost_count:OMNI=1",
+        69
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        66
+      ],
+      [
+        "cost_count:PYRO=0",
+        60
+      ],
+      [
+        "cost_count:HYDRO=0",
+        59
+      ],
+      [
+        "cost_count:HYDRO=1",
+        52
+      ],
+      [
+        "cost_count:ANEMO=0",
+        51
+      ],
+      [
+        "cost_count:GEO=0",
+        51
+      ],
+      [
+        "cost_count:PYRO=1",
+        48
+      ],
+      [
+        "cost_count:ANEMO=1",
+        45
+      ],
+      [
+        "cost_count:CRYO=1",
+        34
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        33
+      ],
+      [
+        "cost_count:GEO=1",
+        30
+      ],
+      [
+        "cost_count:OMNI=2",
+        26
+      ],
+      [
+        "cost_count:DENDRO=1",
+        24
+      ],
+      [
+        "cost_count:OMNI=0",
+        24
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        15
+      ],
+      [
+        "cost_count:GEO=2",
+        15
+      ],
+      [
+        "cost_count:PYRO=2",
+        15
+      ],
+      [
+        "cost_count:OMNI=3",
+        12
+      ],
+      [
+        "cost_count:ELECTRO=3",
+        9
+      ],
+      [
+        "cost_count:ANEMO=2",
+        9
+      ],
+      [
+        "cost_count:DENDRO=2",
+        9
+      ],
+      [
+        "cost_count:PYRO=3",
+        6
+      ],
+      [
+        "cost_count:GEO=3",
+        6
+      ],
+      [
+        "cost_count:HYDRO=2",
+        6
+      ],
+      [
+        "cost_count:HYDRO=3",
+        3
+      ],
+      [
+        "cost_count:ANEMO=3",
+        3
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 21,
+      "(4, 5)": 17,
+      "(3, 5)": 16,
+      "(2, 5)": 16,
+      "(1, 5)": 5,
+      "(5, 6)": 68,
+      "(4, 6)": 27,
+      "(3, 6)": 10,
+      "(2, 6)": 15,
+      "(1, 6)": 3,
+      "(0, 6)": 3,
+      "(6, 5)": 6,
+      "(6, 6)": 12
+    }
+  },
+  "seed2_P2": {
+    "skills": {
+      "skill_actions": 243,
+      "damage_actions": 0,
+      "zero_damage": 243,
+      "kills": 0,
+      "damage_total": 0,
+      "dice_spent": 0
+    },
+    "action_outcomes": {
+      "no_enemy_damage": [
+        243,
+        0,
+        0,
+        0
+      ]
+    },
+    "targets": [],
+    "cost_labels": [
+      [
+        "cost_count:CRYO=0",
+        111
+      ],
+      [
+        "cost_count:ELECTRO=0",
+        90
+      ],
+      [
+        "cost_count:ANEMO=0",
+        87
+      ],
+      [
+        "cost_count:OMNI=1",
+        72
+      ],
+      [
+        "cost_count:HYDRO=0",
+        69
+      ],
+      [
+        "cost_count:GEO=0",
+        66
+      ],
+      [
+        "cost_count:PYRO=1",
+        63
+      ],
+      [
+        "cost_count:DENDRO=0",
+        60
+      ],
+      [
+        "cost_count:GEO=1",
+        60
+      ],
+      [
+        "cost_count:PYRO=0",
+        51
+      ],
+      [
+        "cost_count:HYDRO=1",
+        48
+      ],
+      [
+        "cost_count:ANEMO=1",
+        42
+      ],
+      [
+        "cost_count:ELECTRO=1",
+        39
+      ],
+      [
+        "cost_count:CRYO=1",
+        39
+      ],
+      [
+        "cost_count:DENDRO=1",
+        36
+      ],
+      [
+        "cost_count:GEO=2",
+        33
+      ],
+      [
+        "cost_count:OMNI=0",
+        24
+      ],
+      [
+        "cost_count:OMNI=2",
+        24
+      ],
+      [
+        "cost_count:HYDRO=2",
+        15
+      ],
+      [
+        "cost_count:ELECTRO=3",
+        9
+      ],
+      [
+        "cost_count:PYRO=2",
+        9
+      ],
+      [
+        "cost_count:ELECTRO=2",
+        6
+      ],
+      [
+        "cost_count:PYRO=3",
+        6
+      ],
+      [
+        "cost_count:DENDRO=2",
+        6
+      ],
+      [
+        "cost_count:OMNI=3",
+        6
+      ],
+      [
+        "cost_count:GEO=3",
+        6
+      ],
+      [
+        "cost_count:OMNI=4",
+        3
+      ],
+      [
+        "cost_count:HYDRO=3",
+        3
+      ],
+      [
+        "cost_count:ANEMO=2",
+        3
+      ],
+      [
+        "cost_count:ANEMO=3",
+        3
+      ]
+    ],
+    "hp_bins": {
+      "(5, 5)": 19,
+      "(4, 5)": 14,
+      "(3, 5)": 6,
+      "(2, 5)": 6,
+      "(1, 5)": 9,
+      "(0, 5)": 6,
+      "(6, 5)": 6,
+      "(5, 6)": 51,
+      "(4, 6)": 41,
+      "(3, 6)": 33,
+      "(2, 6)": 27,
+      "(6, 6)": 12,
+      "(1, 6)": 7,
+      "(0, 6)": 6
+    }
+  }
+}
