@@ -35,6 +35,7 @@ class Transition:
     stage_index: int
     candidate_features: tuple[tuple[float, ...], ...]
     candidate_kinds: tuple[str, ...]
+    candidate_action_types: tuple[str, ...]
     action_index: int
     action_label: str
     log_prob: float
@@ -120,6 +121,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 stage_index=obs.stage_index,
                 candidate_features=tuple(c.feature for c in obs.choices),
                 candidate_kinds=tuple(c.kind for c in obs.choices),
+                candidate_action_types=tuple(c.action_type for c in obs.choices),
                 action_index=decision.action_index,
                 action_label=choice.label,
                 log_prob=decision.log_prob,

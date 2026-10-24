@@ -117,6 +117,22 @@ class Choice:
     feature: tuple[float, ...]      # 顺序无关的内容特征（策略头据此打分）
 
     @property
+    def action_type(self) -> str:
+        if self.kind != KIND_TUPLE:
+            return self.kind
+        name = getattr(self.payload, "name", getattr(self.payload, "__name__", str(self.payload)))
+        name = str(name)
+        if name in {"CAST_SKILL"}:
+            return "skill"
+        if name in {"SWAP_CHARACTER", "SELECT_ACTIVE_CHARACTER"}:
+            return "swap"
+        if name in {"PLAY_CARD", "ELEMENTAL_TUNING", "SELECT_CARDS"}:
+            return "card"
+        if name == "END_ROUND":
+            return "end_round"
+        return "card"
+
+    @property
     def label(self) -> str:
         if self.kind.endswith('_count'):
             item, count = self.payload

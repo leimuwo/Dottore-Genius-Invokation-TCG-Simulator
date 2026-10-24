@@ -35,6 +35,7 @@ class PPOItem:
     old_log_prob: float
     advantage: float
     return_: float
+    candidate_action_types: Tensor | None = None
 
 
 class PPOTrainer:
@@ -119,6 +120,9 @@ class PPOTrainer:
                 raise ValueError("PPO item feature width exceeds model feature_dim")
             features[row, :n, :width] = item.candidate_features
             kinds[row, :n] = item.candidate_kinds
+            # Composite kind IDs reserve a block for each coarse action family.
+            if item.candidate_action_types is not None:
+                kinds[row, :n] += 8 * item.candidate_action_types.to(device)
             mask[row, :n] = True
         actions = torch.tensor([item.action_index for item in items], dtype=torch.long, device=device)
         old_log_probs = torch.tensor([item.old_log_prob for item in items], device=device)

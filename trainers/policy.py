@@ -15,6 +15,8 @@ __all__ = ["PolicyValueNet"]
 _KIND_ORDER = ("tuple", "card", "dice", "cost", "commit",
                "card_count", "dice_count", "cost_count")
 _KIND_TO_ID = {name: i for i, name in enumerate(_KIND_ORDER)}
+_ACTION_TYPES = ("tuple", "skill", "card", "swap", "end_round", "dice", "cost", "commit")
+_ACTION_TYPE_TO_ID = {name: i for i, name in enumerate(_ACTION_TYPES)}
 
 
 class PolicyValueNet(nn.Module):
@@ -26,7 +28,7 @@ class PolicyValueNet(nn.Module):
     """
 
     def __init__(self, obs_dim: int = 2778, feature_dim: int = 4,
-                 hidden_dim: int = 256, kind_count: int = len(_KIND_ORDER)):
+                 hidden_dim: int = 256, kind_count: int = len(_KIND_ORDER) * len(_ACTION_TYPES)):
         super().__init__()
         if obs_dim <= 0 or feature_dim <= 0 or hidden_dim <= 0:
             raise ValueError("network dimensions must be positive")
@@ -120,7 +122,10 @@ class PolicyValueNet(nn.Module):
             if len(choice.feature) > self.feature_dim:
                 raise ValueError("choice feature exceeds configured feature_dim")
             features[i, :len(choice.feature)] = torch.tensor(choice.feature, dtype=torch.float32, device=device)
-            kinds[i] = self._kind_id(choice.kind)
+            # Composite embedding: semantic choice kind and coarse action family
+            # are learned separately through disjoint IDs.
+            kinds[i] = self._kind_id(choice.kind) + len(_KIND_ORDER) * _ACTION_TYPE_TO_ID.get(
+                choice.action_type, 0)
         return enc, seat, stage, features, kinds
 
     def distribution(self, obs: Obs, device: torch.device | str | None = None) -> tuple[Tensor, Tensor, Tensor]:
