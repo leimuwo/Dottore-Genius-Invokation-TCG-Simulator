@@ -53,23 +53,11 @@ def _items_from_episode(episode: Episode, gamma: float,
         by_seat.setdefault(transition.seat, []).append(transition)
     result: list[PPOItem] = []
     for transitions in by_seat.values():
-        # Collapse the hierarchical choices into PlayerAction units.  A block
-        # ends at COMMIT; all choices in that block receive one action-level
-        # advantage and return.
-        blocks = []
-        current = []
-        for transition in transitions:
-            current.append(transition)
-            if transition.action_label == "COMMIT":
-                blocks.append(current)
-                current = []
-        if current:
-            blocks.append(current)
         terminal = bool(episode.transitions[-1].done)
         terminal_rewards = episode.transitions[-1].rewards if terminal else None
-        rewards = [sum(x.rewards[x.seat] for x in block) for block in blocks]
-        values = [blocks[i][0].value for i in range(len(blocks))]
-        dones = [any(x.done for x in block) for block in blocks]
+        rewards = [x.rewards[x.seat] for x in transitions]
+        values = [x.value for x in transitions]
+        dones = [x.done for x in transitions]
         # A terminal engine step is observed by the acting seat only.  The
         # opponent's trajectory must nevertheless end at the same payoff;
         # otherwise that seat receives no learning signal for the game result.
@@ -85,10 +73,8 @@ def _items_from_episode(episode: Episode, gamma: float,
         gae = compute_gae(
             rewards, values, dones, gamma=gamma,
             gae_lambda=gae_lambda, next_value=next_value, normalize=False)
-        for block_index, block in enumerate(blocks):
-            advantage = float(gae.advantages[block_index])
-            return_ = float(gae.returns[block_index])
-            for transition in block:
+        for transition, advantage, return_ in zip(
+                transitions, gae.advantages, gae.returns):
                 result.append(PPOItem(
                     enc=torch.tensor(transition.enc, dtype=torch.float32),
                     seat=torch.tensor(float(transition.seat.value)),
@@ -101,7 +87,7 @@ def _items_from_episode(episode: Episode, gamma: float,
                         for kind in transition.candidate_kinds]),
                     action_index=transition.action_index,
                     old_log_prob=transition.log_prob,
-                    advantage=advantage, return_=return_,
+                    advantage=float(advantage), return_=float(return_),
                 ))
     return result
 
