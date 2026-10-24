@@ -44,6 +44,7 @@ class Transition:
     rewards: dict[Pid, float]
     done: bool
     terminal_reason: str | None
+    commit_diagnostic: dict | None = None
 
 
 @dataclass
@@ -56,6 +57,7 @@ class Episode:
     bootstrap_obs: Obs | None = None
     final_summary: dict | None = None
     tail_actions: tuple[dict, ...] = ()
+    commit_diagnostics: tuple[dict, ...] = ()
 
 
 class Policy(Protocol):
@@ -97,6 +99,8 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                     deck_p1=None, deck_p2=None) -> Episode:
     episode = Episode(seed=seed)
     commit_tail: deque[dict] = deque(maxlen=20)
+    commit_diagnostics: list[dict] = []
+    no_damage_streak = 0
     action_block_length = 0
     try:
         obs = env.reset(deck_p1, deck_p2, seed)
@@ -125,7 +129,13 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 rewards=dict(out.info.get("rewards", {})),
                 done=out.done,
                 terminal_reason=out.terminal_reason,
+                commit_diagnostic=out.info.get("commit_diagnostic"),
             ))
+            diagnostic = out.info.get("commit_diagnostic")
+            if diagnostic is not None:
+                no_damage_streak = no_damage_streak + 1 if diagnostic["damage_dealt"] == 0 else 0
+                diagnostic = {**diagnostic, "no_damage_streak": no_damage_streak}
+                commit_diagnostics.append(diagnostic)
             if choice.label == "COMMIT":
                 commit_tail.append({
                     "seat": obs.seat.name,
@@ -138,6 +148,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 episode.terminal_reason = out.terminal_reason
                 episode.final_summary = _summary(env)
                 episode.tail_actions = tuple(commit_tail)
+                episode.commit_diagnostics = tuple(commit_diagnostics)
                 return episode
             if out.obs is None:
                 raise CardEnvError("exception", "non-terminal step returned no obs")
@@ -146,6 +157,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
             episode.bootstrap_obs = obs
             episode.final_summary = _summary(env)
             episode.tail_actions = tuple(commit_tail)
+            episode.commit_diagnostics = tuple(commit_diagnostics)
             return episode
         raise CardEnvError("noop", f"rollout exceeded {max_steps} steps")
     except CardEnvError as exc:

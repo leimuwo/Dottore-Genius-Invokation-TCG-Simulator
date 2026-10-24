@@ -127,6 +127,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     episode_commits: list[int] = []
     truncated_summaries: list[dict] = []
     truncated_tail_actions: list[tuple[dict, ...]] = []
+    commit_diagnostics: list[dict] = []
     batch_sizes: list[int] = []
     timings = {"sampling": 0.0, "gae": 0.0, "ppo_update": 0.0}
     pool = None
@@ -210,6 +211,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                     truncated_tail_actions.append(episode.tail_actions)
                 start_gae = time.perf_counter()
                 pending.extend(_items_from_episode(episode, gamma, gae_lambda, model))
+                commit_diagnostics.extend(episode.commit_diagnostics)
                 timings["gae"] += time.perf_counter() - start_gae
             else:
                 failed_episodes += 1
@@ -248,5 +250,6 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         / len(truncated_summaries) if truncated_summaries else 0.0)
     # Kept in the manifest as structured diagnostics for the truncation study.
     metrics["truncated_tail_actions"] = truncated_tail_actions
+    metrics["commit_diagnostics"] = commit_diagnostics
     return TrainResult(count, valid_episodes, failed_episodes, updates, metrics,
                        timings, tuple(batch_sizes))

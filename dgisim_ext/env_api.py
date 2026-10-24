@@ -434,6 +434,7 @@ class CardEnv:
         action: PlayerAction = self._gen.generate_action()
         before = (hash(self._gs), self._gs.waiting_for())
         before_state = self._gs
+        before_snapshot = _combat_snapshot(before_state)
         start = time.perf_counter()
         with self._engine_rng():
             state = self._gs.action_step(actor, action)
@@ -450,19 +451,24 @@ class CardEnv:
         if self._gs.game_end():
             rewards = payoff_of(self._gs, self._timeout_penalty)
             rewards = self._with_shaping(rewards, before_state, self._gs)
+            commit_diagnostic = _commit_diagnostic(
+                action, actor, before_snapshot, _combat_snapshot(self._gs))
             return StepOut(
                 None,
                 rewards[actor],
                 True,
                 {"rewards": rewards, "terminal_reason": _reason(self._gs),
+                 "commit_diagnostic": commit_diagnostic,
                  "decision_index": self._decision_index, "actor": actor.name,
                  "committed": True},
             )
         rewards = self._with_shaping(
             {Pid.P1: 0.0, Pid.P2: 0.0}, before_state, self._gs)
+        commit_diagnostic = _commit_diagnostic(
+            action, actor, before_snapshot, _combat_snapshot(self._gs))
         return StepOut(self.obs(), rewards[actor], False,
                        {"filled": False, "actor": actor.name, "committed": True,
-                        "rewards": rewards})
+                        "rewards": rewards, "commit_diagnostic": commit_diagnostic})
 
     def _with_shaping(self, rewards, before, after):
         if not self._shaping or self._shaping_lambda == 0.0:
@@ -527,3 +533,62 @@ class CardEnv:
 
 def _reason(state: GameState) -> str:
     return "timeout" if state.get_winner() is None else f"kill:{state.get_winner().name}"
+
+
+def _combat_snapshot(state: GameState) -> dict:
+    """Small public state diff used by rollout diagnostics."""
+    result = {}
+    for pid in (Pid.P1, Pid.P2):
+        chars = []
+        for character in state.get_player(pid).characters.get_characters():
+            statuses = list(character.get_all_statuses_ordered_flattened())
+            shield = 0
+            for status in statuses:
+                if "Shield" in type(status).__name__:
+                    usages = getattr(status, "usages", 0)
+                    amount = getattr(status, "SHIELD_AMOUNT", 1)
+                    shield += int(usages) * int(amount)
+            chars.append({
+                "id": character.id, "hp": max(0, character.hp),
+                "alive": bool(character.alive), "energy": character.energy,
+                "statuses": tuple(type(s).__name__ for s in statuses),
+                "shield": shield,
+            })
+        result[pid.name] = chars
+    return result
+
+
+def _commit_diagnostic(action: PlayerAction, actor: Pid,
+                       before: dict, after: dict) -> dict:
+    def totals(snapshot, pid):
+        chars = snapshot[pid.name]
+        return sum(c["hp"] for c in chars), sum(c["alive"] for c in chars)
+    opponent = actor.other
+    own_hp_before, own_alive_before = totals(before, actor)
+    own_hp_after, own_alive_after = totals(after, actor)
+    opp_hp_before, opp_alive_before = totals(before, opponent)
+    opp_hp_after, opp_alive_after = totals(after, opponent)
+    action_name = type(action).__name__
+    action_type = {
+        "SkillAction": "skill", "CardAction": "card",
+        "SwapAction": "swap", "DeathSwapAction": "swap",
+        "EndRoundAction": "end_round", "ElementalTuningAction": "card",
+    }.get(action_name, action_name)
+    skill = getattr(getattr(action, "skill", None), "name", None)
+    skill_type = skill or getattr(getattr(action, "card", None), "__name__", None)
+    before_shield = sum(c["shield"] for c in before[opponent.name])
+    after_shield = sum(c["shield"] for c in after[opponent.name])
+    return {
+        "actor": actor.name, "action_type": action_type,
+        "skill_type": skill_type,
+        "damage_dealt": max(0, opp_hp_before - opp_hp_after),
+        "damage_taken": max(0, own_hp_before - own_hp_after),
+        "healing_dealt": max(0, opp_hp_after - opp_hp_before),
+        "healing_received": max(0, own_hp_after - own_hp_before),
+        "enemy_kills": max(0, opp_alive_before - opp_alive_after),
+        "hp_delta": {"self": own_hp_after - own_hp_before,
+                     "enemy": opp_hp_after - opp_hp_before},
+        "shield_before": before_shield, "shield_after": after_shield,
+        "shield_delta": after_shield - before_shield,
+        "before": before, "after": after,
+    }

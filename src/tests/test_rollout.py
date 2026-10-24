@@ -37,3 +37,20 @@ class TestRollout(unittest.TestCase):
         self.assertFalse(episode.valid)
         self.assertEqual(episode.failure["category"], "illegal")
         self.assertEqual(episode.transitions, [])
+
+    def test_commit_diagnostics_capture_state_delta(self):
+        episode = collect_episode(
+            CardEnv(shaping=False), 12, random_decision(random.Random(99)),
+            max_steps=12, allow_truncated=True)
+        self.assertTrue(episode.valid)
+        self.assertTrue(episode.commit_diagnostics)
+        row = episode.commit_diagnostics[0]
+        self.assertIn(row["action_type"], {
+            "skill", "card", "swap", "end_round", "DeathSwapAction",
+            "CharacterSelectAction", "CardsSelectAction", "DiceSelectAction",
+        })
+        self.assertIn("damage_dealt", row)
+        self.assertIn("shield_delta", row)
+        self.assertIn("no_damage_streak", row)
+        self.assertIn("P1", row["before"])
+        self.assertIn("P2", row["after"])
