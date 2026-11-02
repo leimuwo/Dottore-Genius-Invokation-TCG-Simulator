@@ -2,6 +2,8 @@
 
 本仓库是 **dgisim 的 fork**（上游已 archive，基线 commit `fd39ddc`）。目标是把它变成可复现的两人零和不完全信息博弈训练环境。
 
+开始 M2 前必读 `docs/M2-agent-alignment.md`：汇总 M1 接口、奖励与信息边界、验收证据和未决项。超时双负下收益不严格零和。
+
 ## 绝对边界
 
 - 只准用公开面 `src.dgisim.*`（本仓库测试的既有约定）；禁止 `src.dgisim._core`。

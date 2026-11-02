@@ -1,5 +1,7 @@
 # GPU 环境接续开发
 
+M2 Agent 先读 [M1 约束与交接契约](M2-agent-alignment.md)，对齐实际接口、工程边界与未决项。
+
 本 fork 已完成 M1 的 CardEnv、跨进程复现、性能及 10,000 局随机稳定性验收。
 M2 的 Policy-Value 网络、PPO learner 和训练 CLI 尚未实现，当前没有可直接启动的 GPU 训练任务。
 M2 首先需要实现训练闭环；完整路线图原文保存在 `analysis/project-context/milestone.md`。

@@ -2,6 +2,7 @@
 
 本 fork 的 M1 已验收。GPU 环境接续开发、当前实现范围及自检命令见
 [GPU 环境交接说明](docs/GPU-handoff.md)；M2 PPO 训练入口尚未实现。
+M2 Agent 开工前必读 [M1 约束与交接契约](docs/M2-agent-alignment.md)。
 
 [![PyPI Version](https://img.shields.io/pypi/v/dgisim.svg)](https://pypi.org/project/dgisim/)
 [![Documentation Status](https://readthedocs.org/projects/dottore-genius-invokation-tcg-simulator/badge/?version=latest)](https://dottore-genius-invokation-tcg-simulator.readthedocs.io/en/latest/?badge=latest)
