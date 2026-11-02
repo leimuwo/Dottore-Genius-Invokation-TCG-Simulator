@@ -46,23 +46,21 @@ def _items_from_episode(episode: Episode, gamma: float,
                         gae_lambda: float, model=None) -> list[PPOItem]:
     if not episode.valid or not episode.transitions:
         return []
-    # Choice layers are the optimization steps. Rewards are zero at layers
-    # before a commit; this preserves the environment's explicit hierarchy.
+    # Choice layers remain the optimization steps, but rewards are assigned on
+    # each seat's decision interval. This includes rewards emitted while the
+    # opponent acts and prevents terminal payoff from overwriting shaping.
     by_seat: dict[object, list] = {}
     for transition in episode.transitions:
         by_seat.setdefault(transition.seat, []).append(transition)
+    ledger = _decision_interval_rewards(episode, by_seat)
     result: list[PPOItem] = []
-    for transitions in by_seat.values():
-        terminal = bool(episode.transitions[-1].done)
-        terminal_rewards = episode.transitions[-1].rewards if terminal else None
-        rewards = [x.rewards[x.seat] for x in transitions]
+    for seat, transitions in by_seat.items():
+        rewards = ledger[seat]
         values = [x.value for x in transitions]
         dones = [x.done for x in transitions]
-        # A terminal engine step is observed by the acting seat only.  The
-        # opponent's trajectory must nevertheless end at the same payoff;
-        # otherwise that seat receives no learning signal for the game result.
-        if terminal and terminal_rewards is not None:
-            rewards[-1] = terminal_rewards[transitions[-1].seat]
+        if episode.transitions[-1].done:
+            # The terminal payoff is present in the final transition's reward
+            # map. Both seat trajectories end at the same game terminal.
             dones[-1] = True
         next_value = 0.0
         if episode.bootstrap_obs is not None and transitions[-1].seat is episode.bootstrap_obs.seat:
@@ -95,6 +93,37 @@ def _items_from_episode(episode: Episode, gamma: float,
                     advantage=float(advantage), return_=float(return_),
                 ))
     return result
+
+
+def _decision_interval_rewards(episode: Episode, by_seat: dict) -> dict:
+    """Accumulate each seat's rewards until its next decision.
+
+    A reward map is emitted after every committed action, including the
+    opponent's action. The acting seat starts a new interval before its own
+    reward is added; all other seats keep accumulating that reward in their
+    current interval. This makes terminal payoff additive and preserves
+    opponent/automatic shaping in both trajectories.
+    """
+    rewards = {seat: [0.0] * len(transitions)
+               for seat, transitions in by_seat.items()}
+    positions = {seat: index for seat, index in
+                 ((seat, 0) for seat in by_seat)}
+    pending = {seat: 0.0 for seat in by_seat}
+    seen = {seat: False for seat in by_seat}
+    for transition in episode.transitions:
+        seat = transition.seat
+        if seen[seat]:
+            rewards[seat][positions[seat]] += pending[seat]
+            positions[seat] += 1
+            pending[seat] = 0.0
+        else:
+            seen[seat] = True
+        for target, value in transition.rewards.items():
+            if target in pending:
+                pending[target] += float(value)
+    for seat in by_seat:
+        rewards[seat][positions[seat]] += pending[seat]
+    return rewards
 
 
 def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
