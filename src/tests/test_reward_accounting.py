@@ -28,3 +28,21 @@ class TestRewardAccounting(unittest.TestCase):
         self.assertEqual(rewards[Pid.P1][1], 1.0)
         self.assertAlmostEqual(rewards[Pid.P2][0], -0.9)
 
+    def test_opponent_commits_are_discounted_inside_interval(self):
+        transitions = [
+            SimpleNamespace(seat=Pid.P1, action_label="COMMIT",
+                            rewards={Pid.P1: 0.0, Pid.P2: 0.0}),
+            SimpleNamespace(seat=Pid.P2, action_label="COMMIT",
+                            rewards={Pid.P1: 10.0, Pid.P2: -10.0}),
+            SimpleNamespace(seat=Pid.P2, action_label="COMMIT",
+                            rewards={Pid.P1: 20.0, Pid.P2: -20.0}),
+            SimpleNamespace(seat=Pid.P1, action_label="COMMIT",
+                            rewards={Pid.P1: 0.0, Pid.P2: 0.0}),
+        ]
+        episode = SimpleNamespace(transitions=transitions)
+        rewards = _decision_interval_rewards(
+            episode, {Pid.P1: [transitions[0], transitions[3]],
+                      Pid.P2: [transitions[1], transitions[2]]}, gamma=0.5)
+        self.assertAlmostEqual(rewards[Pid.P1][0], 10.0 + 0.5 * 20.0)
+        self.assertAlmostEqual(rewards[Pid.P2][0], -10.0)
+

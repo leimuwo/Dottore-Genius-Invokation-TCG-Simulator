@@ -52,7 +52,8 @@ def _items_from_episode(episode: Episode, gamma: float,
     by_seat: dict[object, list] = {}
     for transition in episode.transitions:
         by_seat.setdefault(transition.seat, []).append(transition)
-    ledger = _decision_interval_rewards(episode, by_seat)
+    ledger = _decision_interval_rewards(episode, by_seat, gamma=gamma)
+    interval_gammas = _decision_interval_gammas(episode, by_seat, gamma)
     result: list[PPOItem] = []
     for seat, transitions in by_seat.items():
         rewards = ledger[seat]
@@ -60,8 +61,7 @@ def _items_from_episode(episode: Episode, gamma: float,
         dones = [x.done for x in transitions]
         # Choice construction is instantaneous; only a committed action
         # advances the game clock and receives the configured discount.
-        gammas = [gamma if x.action_label == "COMMIT" else 1.0
-                  for x in transitions]
+        gammas = interval_gammas[seat]
         if episode.transitions[-1].done:
             # The terminal payoff is present in the final transition's reward
             # map. Both seat trajectories end at the same game terminal.
@@ -101,7 +101,7 @@ def _items_from_episode(episode: Episode, gamma: float,
     return result
 
 
-def _decision_interval_rewards(episode: Episode, by_seat: dict) -> dict:
+def _decision_interval_rewards(episode: Episode, by_seat: dict, gamma: float = 1.0) -> dict:
     """Accumulate each seat's rewards until its next decision.
 
     A reward map is emitted after every committed action, including the
@@ -115,6 +115,7 @@ def _decision_interval_rewards(episode: Episode, by_seat: dict) -> dict:
     positions = {seat: index for seat, index in
                  ((seat, 0) for seat in by_seat)}
     pending = {seat: 0.0 for seat in by_seat}
+    elapsed = {seat: 0 for seat in by_seat}
     seen = {seat: False for seat in by_seat}
     for transition in episode.transitions:
         seat = transition.seat
@@ -122,14 +123,36 @@ def _decision_interval_rewards(episode: Episode, by_seat: dict) -> dict:
             rewards[seat][positions[seat]] += pending[seat]
             positions[seat] += 1
             pending[seat] = 0.0
+            elapsed[seat] = 0
         else:
             seen[seat] = True
         for target, value in transition.rewards.items():
             if target in pending:
-                pending[target] += float(value)
+                pending[target] += (gamma ** elapsed[target]) * float(value)
+        for target in pending:
+            if (seen[target]
+                    and getattr(transition, "action_label", None) == "COMMIT"
+                    and transition.seat is not target):
+                elapsed[target] += 1
     for seat in by_seat:
         rewards[seat][positions[seat]] += pending[seat]
     return rewards
+
+
+def _decision_interval_gammas(episode: Episode, by_seat: dict, gamma: float) -> dict:
+    """Discount from each seat decision to its next decision boundary."""
+    positions = {seat: [i for i, t in enumerate(episode.transitions)
+                         if t.seat is seat] for seat in by_seat}
+    result = {}
+    for seat, indices in positions.items():
+        values = []
+        for pos, index in enumerate(indices):
+            end = indices[pos + 1] if pos + 1 < len(indices) else len(episode.transitions)
+            commits = sum(episode.transitions[j].action_label == "COMMIT"
+                          for j in range(index, end))
+            values.append(gamma ** commits)
+        result[seat] = values
+    return result
 
 
 def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
@@ -211,11 +234,15 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         start = time.perf_counter()
         batch_n = min(env_workers, steps - count)
         jobs = []
+        remaining_budget = steps - count
+        caps = [remaining_budget // batch_n
+                + (1 if offset < remaining_budget % batch_n else 0)
+                for offset in range(batch_n)]
         for offset in range(batch_n):
             current_seed = game_seed + offset
             deck_p1 = training_decks[current_seed % len(training_decks)][1]
             deck_p2 = training_decks[(current_seed // len(training_decks) + 1) % len(training_decks)][1]
-            max_steps = min(max_episode_steps, steps - count - offset)
+            max_steps = min(max_episode_steps, caps[offset])
             if max_steps <= 0:
                 continue
             if pool is None:
@@ -230,20 +257,6 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         episodes = [job.result() if hasattr(job, "result") else job for job in jobs]
         remaining = steps - count
         for episode in episodes:
-            if len(episode.transitions) > remaining:
-                episode.transitions = episode.transitions[:remaining]
-                # The environment state after the original episode is no
-                # longer the state after the retained prefix. Drop terminal
-                # metadata and bootstrap observations rather than pairing
-                # samples with an inconsistent suffix.
-                episode.terminal_reason = None
-                episode.bootstrap_obs = None
-                episode.bootstrap_obs_by_seat = {}
-                episode.final_summary = None
-                episode.tail_actions = ()
-                episode.commit_diagnostics = tuple(
-                    t.commit_diagnostic for t in episode.transitions
-                    if t.commit_diagnostic is not None)
             if not episode.transitions:
                 continue
             count += len(episode.transitions)
@@ -287,11 +300,13 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     flush_batch()
     metrics = ({key: value / updates for key, value in metric_totals.items()}
                if updates else {})
-    total_transitions = max(1, sum(action_counts.values()))
+    total_commits = max(1, action_counts["commit"])
     metrics.update({
-        "swap_rate": action_counts["swap"] / total_transitions,
-        "skill_rate": action_counts["skill"] / total_transitions,
-        "commit_rate": action_counts["commit"] / total_transitions,
+        # These rates are over committed game actions, not layered choices.
+        # A skill/swap may have several preceding payment choices.
+        "swap_rate": commit_action_counts.get("swap", 0) / total_commits,
+        "skill_rate": commit_action_counts.get("skill", 0) / total_commits,
+        "commit_rate": action_counts["commit"] / total_commits,
         "timeout_rate": terminal_counts["timeout"] / max(1, valid_episodes),
         "engine_timeout_rate": terminal_counts["timeout"] / max(1, valid_episodes),
         "kill_rate": terminal_counts["kill"] / max(1, valid_episodes),

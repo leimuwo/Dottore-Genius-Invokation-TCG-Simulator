@@ -32,7 +32,7 @@ class Transition:
     obs_fingerprint: str
     enc: tuple[int, ...]
     seat: Pid
-    stage_index: int
+    stage_index: float
     candidate_features: tuple[tuple[float, ...], ...]
     candidate_kinds: tuple[str, ...]
     candidate_action_types: tuple[str, ...]
@@ -69,7 +69,9 @@ class Policy(Protocol):
 def obs_fingerprint(obs: Obs) -> str:
     """Stable fingerprint of public observation and candidate content."""
     payload = repr((obs.seat.name, obs.enc, obs.stage_index,
-                    tuple((c.kind, c.feature) for c in obs.choices))).encode()
+                    tuple((c.kind, c.feature) for c in obs.choices),
+                    obs.meta.get("choice_prefix", ()),
+                    obs.meta.get("selection_prefix", ()))).encode()
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -121,7 +123,7 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
                 obs_fingerprint=obs_fingerprint(obs),
                 enc=obs.enc,
                 seat=obs.seat,
-                stage_index=obs.stage_index,
+                stage_index=model_stage(obs),
                 candidate_features=tuple(c.feature for c in obs.choices),
                 candidate_kinds=tuple(c.kind for c in obs.choices),
                 candidate_action_types=tuple(c.action_type for c in obs.choices),
@@ -197,3 +199,9 @@ def collect_rollout(env_factory: Callable[[], CardEnv], seeds: list[int],
     """Collect independent episodes; invalid episodes remain diagnostics only."""
     return [collect_episode(env_factory(), seed, policy, max_steps=max_steps)
             for seed in seeds]
+
+
+def model_stage(obs: Obs) -> float:
+    """Use the exact stage encoding consumed by PolicyValueNet."""
+    from .policy import PolicyValueNet
+    return PolicyValueNet.observation_stage(obs)

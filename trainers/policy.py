@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Any
+import hashlib
+import json
 
 import torch
 from torch import Tensor, nn
@@ -109,6 +111,31 @@ class PolicyValueNet(nn.Module):
         except KeyError as exc:
             raise ValueError(f"unknown choice kind: {kind}") from exc
 
+    @staticmethod
+    def _prefix_payload(obs: Obs) -> tuple:
+        """Canonical, structured prefix data used by every policy call.
+
+        Keeping the action labels and payment counts as fields (rather than a
+        character sum) makes payment allocations distinguishable and gives
+        rollout/PPO/bootstrap one stable encoding contract.
+        """
+        return (tuple(str(x) for x in obs.meta.get("choice_prefix", ())),
+                tuple(int(x) for x in obs.meta.get("selection_prefix", ())))
+
+    @classmethod
+    def observation_stage(cls, obs: Obs) -> float:
+        prefix, selection = cls._prefix_payload(obs)
+        payload = json.dumps({"actions": prefix, "payment": selection},
+                             ensure_ascii=True, separators=(",", ":"), sort_keys=True).encode()
+        digest = hashlib.blake2b(payload, digest_size=8).digest()
+        # Two independent digest bytes are retained in the legacy stage scalar.
+        # This preserves checkpoint dimensions while avoiding order/character
+        # sums and keeping the value numerically close to stage_index.
+        code = int.from_bytes(digest, "big")
+        return (float(obs.stage_index) + len(prefix) / 100.0
+                + (code % 65521) / 6552100.0
+                + ((code // 65521) % 65521) / 655210000.0)
+
     def tensors_for(self, obs: Obs, device: torch.device | str | None = None
                     ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
         """Convert one public ``Obs`` to tensors consumed by :meth:`forward`."""
@@ -121,13 +148,7 @@ class PolicyValueNet(nn.Module):
         # final two dynamic channels so payment/target choices are path-aware
         # without changing checkpoint tensor dimensions.
         seat = torch.tensor(float(obs.seat.value), dtype=torch.float32, device=device)
-        prefix = tuple(obs.meta.get("choice_prefix", ()))
-        selection = tuple(obs.meta.get("selection_prefix", ()))
-        prefix_code = sum((i + 1) * sum(ord(ch) for ch in str(x))
-                          for i, x in enumerate(prefix)) % 4096
-        stage = torch.tensor(float(obs.stage_index) + len(prefix) / 100.0
-                             + prefix_code / 409600.0
-                             + sum(selection) / 6400.0,
+        stage = torch.tensor(self.observation_stage(obs),
                              dtype=torch.float32, device=device)
         features = torch.zeros((len(obs.choices), self.feature_dim), dtype=torch.float32, device=device)
         kinds = torch.empty(len(obs.choices), dtype=torch.long, device=device)
@@ -152,7 +173,7 @@ class PolicyValueNet(nn.Module):
         device = torch.device(device) if device is not None else None
         enc = torch.tensor(obs.enc, dtype=torch.float32, device=device)
         seat = torch.tensor(float(obs.seat.value), dtype=torch.float32, device=device)
-        stage = torch.tensor(float(obs.stage_index), dtype=torch.float32, device=device)
+        stage = torch.tensor(self.observation_stage(obs), dtype=torch.float32, device=device)
         return self.value_head(self._state(enc, seat, stage)).squeeze(-1)
 
     @torch.no_grad()
