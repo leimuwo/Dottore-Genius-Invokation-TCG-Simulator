@@ -189,6 +189,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     commit_action_counts: dict[str, int] = {}
     choice_counts: dict[str, int] = {}
     terminal_counts = {"kill": 0, "timeout": 0, "truncated": 0}
+    truncation_counts = {"budget": 0, "max_episode_steps": 0}
     episode_lengths: list[int] = []
     episode_commits: list[int] = []
     truncated_summaries: list[dict] = []
@@ -256,7 +257,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                                         shaping_lambda, shaping_enabled))
         episodes = [job.result() if hasattr(job, "result") else job for job in jobs]
         remaining = steps - count
-        for episode in episodes:
+        for episode_index, episode in enumerate(episodes):
             if not episode.transitions:
                 continue
             count += len(episode.transitions)
@@ -276,6 +277,15 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                     terminal_counts["kill"] += 1
                 elif episode.terminal_reason is None:
                     terminal_counts["truncated"] += 1
+                    # A worker is capped by both the remaining global budget
+                    # and max_episode_steps. Classify the boundary explicitly
+                    # so these two causes are never reported as one rate.
+                    episode_budget_end = count >= steps
+                    cap = caps[episode_index]
+                    if episode_budget_end or cap < max_episode_steps:
+                        truncation_counts["budget"] += 1
+                    else:
+                        truncation_counts["max_episode_steps"] += 1
                     if episode.final_summary is not None:
                         truncated_summaries.append(episode.final_summary)
                     truncated_tail_actions.append(episode.tail_actions)
@@ -325,6 +335,11 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
         / len(truncated_summaries) if truncated_summaries else 0.0)
     # Kept in the manifest as structured diagnostics for the truncation study.
     metrics["truncated_tail_actions"] = truncated_tail_actions
+    metrics["truncation_budget_count"] = truncation_counts["budget"]
+    metrics["truncation_max_episode_steps_count"] = truncation_counts["max_episode_steps"]
+    metrics["truncation_budget_rate"] = truncation_counts["budget"] / max(1, valid_episodes)
+    metrics["truncation_max_episode_steps_rate"] = (
+        truncation_counts["max_episode_steps"] / max(1, valid_episodes))
     metrics["commit_diagnostics"] = commit_diagnostics
     metrics["choice_counts"] = choice_counts
     metrics["commit_action_counts"] = commit_action_counts
