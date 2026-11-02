@@ -126,6 +126,8 @@ class Choice:
             return "skill"
         if name in {"SWAP_CHARACTER", "SELECT_ACTIVE_CHARACTER"}:
             return "swap"
+        if name == "SELECT_DICE":
+            return "reroll"
         if name in {"PLAY_CARD", "ELEMENTAL_TUNING", "SELECT_CARDS"}:
             return "card"
         if name == "END_ROUND":
