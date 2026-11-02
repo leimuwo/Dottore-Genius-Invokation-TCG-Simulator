@@ -131,8 +131,7 @@ def _decision_interval_rewards(episode: Episode, by_seat: dict, gamma: float = 1
                 pending[target] += (gamma ** elapsed[target]) * float(value)
         for target in pending:
             if (seen[target]
-                    and getattr(transition, "action_label", None) == "COMMIT"
-                    and transition.seat is not target):
+                    and getattr(transition, "action_label", None) == "COMMIT"):
                 elapsed[target] += 1
     for seat in by_seat:
         rewards[seat][positions[seat]] += pending[seat]

@@ -9,6 +9,17 @@ from trainers.loop import _decision_interval_rewards
 
 
 class TestRewardAccounting(unittest.TestCase):
+    @staticmethod
+    def _reference_interval(transitions, seat, gamma):
+        """Independent hand implementation: discount each COMMIT boundary."""
+        total = 0.0
+        exponent = 0
+        for transition in transitions:
+            total += (gamma ** exponent) * transition.rewards[seat]
+            if transition.action_label == "COMMIT":
+                exponent += 1
+        return total
+
     def test_training_uses_actor_seat_reward_mapping(self):
         episode = collect_episode(CardEnv(), 3, random_decision(random.Random(4)), max_steps=8,
                                   allow_truncated=True)
@@ -43,13 +54,15 @@ class TestRewardAccounting(unittest.TestCase):
         rewards = _decision_interval_rewards(
             episode, {Pid.P1: [transitions[0], transitions[3]],
                       Pid.P2: [transitions[1], transitions[2]]}, gamma=0.5)
-        self.assertAlmostEqual(rewards[Pid.P1][0], 10.0 + 0.5 * 20.0)
+        self.assertAlmostEqual(rewards[Pid.P1][0], 0.5 * 10.0 + 0.25 * 20.0)
         self.assertAlmostEqual(rewards[Pid.P2][0], -10.0)
+        self.assertAlmostEqual(
+            rewards[Pid.P1][0], self._reference_interval(transitions[:3], Pid.P1, 0.5))
 
     def test_discounted_potential_shaping_telescopes(self):
         transitions = [
             SimpleNamespace(seat=Pid.P1, action_label="COMMIT",
-                            rewards={Pid.P1: 10.0, Pid.P2: -10.0}),
+                            rewards={Pid.P1: 5.0, Pid.P2: -5.0}),
             SimpleNamespace(seat=Pid.P2, action_label="COMMIT",
                             rewards={Pid.P1: -10.0, Pid.P2: 10.0}),
             SimpleNamespace(seat=Pid.P1, action_label="COMMIT",
@@ -59,6 +72,6 @@ class TestRewardAccounting(unittest.TestCase):
         rewards = _decision_interval_rewards(
             episode, {Pid.P1: [transitions[0], transitions[2]],
                       Pid.P2: [transitions[1]]}, gamma=0.5)
-        # The two COMMIT rewards in the interval cancel at the same time scale.
+        # Phi: 0 -> 10 -> 0 with gamma=.5 gives 5 + .5*(-10) = 0.
         self.assertAlmostEqual(rewards[Pid.P1][0], 0.0)
 
