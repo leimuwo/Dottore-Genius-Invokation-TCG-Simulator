@@ -16,7 +16,7 @@ class GAEResult:
 
 def compute_gae(rewards, values, dones, *, gamma: float = 0.99,
                 gae_lambda: float = 0.95, next_value: float = 0.0,
-                normalize: bool = True) -> GAEResult:
+                normalize: bool = True, gammas=None) -> GAEResult:
     """Compute GAE without using an opponent's reward as a negation.
 
     Inputs are ordered transitions for one seat.  ``dones`` marks terminal
@@ -30,7 +30,8 @@ def compute_gae(rewards, values, dones, *, gamma: float = 0.99,
     r = torch.as_tensor(rewards, dtype=torch.float32)
     v = torch.as_tensor(values, dtype=torch.float32)
     d = torch.as_tensor(dones, dtype=torch.float32)
-    if r.ndim != 1 or v.shape != r.shape or d.shape != r.shape:
+    g = torch.full_like(r, float(gamma)) if gammas is None else torch.as_tensor(gammas, dtype=torch.float32)
+    if r.ndim != 1 or v.shape != r.shape or d.shape != r.shape or g.shape != r.shape:
         raise ValueError("rewards, values and dones must be equal-length vectors")
     if not torch.isfinite(r).all() or not torch.isfinite(v).all():
         raise ValueError("rewards and values must be finite")
@@ -40,8 +41,8 @@ def compute_gae(rewards, values, dones, *, gamma: float = 0.99,
     for index in range(len(r) - 1, -1, -1):
         following = torch.zeros((), dtype=torch.float32) if d[index] else (
             bootstrap if index == len(r) - 1 else v[index + 1])
-        delta = r[index] + gamma * following - v[index]
-        gae = delta + gamma * gae_lambda * (1.0 - d[index]) * gae
+        delta = r[index] + g[index] * following - v[index]
+        gae = delta + g[index] * gae_lambda * (1.0 - d[index]) * gae
         advantages[index] = gae
     returns = advantages + v
     if normalize and len(advantages) > 1:

@@ -56,6 +56,7 @@ class Episode:
     failure: dict | None = None
     terminal_reason: str | None = None
     bootstrap_obs: Obs | None = None
+    bootstrap_obs_by_seat: dict[Pid, Obs] = field(default_factory=dict)
     final_summary: dict | None = None
     tail_actions: tuple[dict, ...] = ()
     commit_diagnostics: tuple[dict, ...] = ()
@@ -103,12 +104,14 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
     commit_diagnostics: list[dict] = []
     no_damage_streak = 0
     action_block_length = 0
+    last_obs_by_seat: dict[Pid, Obs] = {}
     try:
         obs = env.reset(deck_p1, deck_p2, seed)
         for _ in range(max_steps):
             if not obs.choices:
                 raise CardEnvError("exception", "observation has no choices")
             decision = policy(obs)
+            last_obs_by_seat[obs.seat] = obs
             if not 0 <= decision.action_index < len(obs.choices):
                 raise CardEnvError("illegal", "policy returned invalid choice")
             choice = obs.choices[decision.action_index]
@@ -157,6 +160,9 @@ def collect_episode(env: CardEnv, seed: int, policy: Policy,
             obs = out.obs
         if allow_truncated:
             episode.bootstrap_obs = obs
+            episode.bootstrap_obs_by_seat = {
+                pid: env.obs(pid) for pid in Pid
+            }
             episode.final_summary = _summary(env)
             episode.tail_actions = tuple(commit_tail)
             episode.commit_diagnostics = tuple(commit_diagnostics)

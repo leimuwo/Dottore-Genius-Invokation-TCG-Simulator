@@ -19,14 +19,14 @@ __all__ = ["TrainResult", "train_steps"]
 
 
 def _parallel_episode_worker(model_state, hidden_dim, seed, deck_p1, deck_p2,
-                             max_steps, shaping_lambda):
+                             max_steps, shaping_lambda, shaping):
     """Process worker: owns its CardEnv and CPU policy copy."""
     model = PolicyValueNet(hidden_dim=hidden_dim)
     model.load_state_dict(model_state)
     model.eval()
     generator = torch.Generator().manual_seed(seed)
     policy = model_decision(model, generator=generator, device="cpu")
-    env = CardEnv(shaping_lambda=shaping_lambda)
+    env = CardEnv(shaping_lambda=shaping_lambda, shaping=shaping)
     return collect_episode(env, seed, policy, max_steps=max_steps,
                            allow_truncated=True, deck_p1=deck_p1, deck_p2=deck_p2)
 
@@ -58,18 +58,24 @@ def _items_from_episode(episode: Episode, gamma: float,
         rewards = ledger[seat]
         values = [x.value for x in transitions]
         dones = [x.done for x in transitions]
+        # Choice construction is instantaneous; only a committed action
+        # advances the game clock and receives the configured discount.
+        gammas = [gamma if x.action_label == "COMMIT" else 1.0
+                  for x in transitions]
         if episode.transitions[-1].done:
             # The terminal payoff is present in the final transition's reward
             # map. Both seat trajectories end at the same game terminal.
             dones[-1] = True
         next_value = 0.0
-        if episode.bootstrap_obs is not None and transitions[-1].seat is episode.bootstrap_obs.seat:
+        bootstrap_obs = episode.bootstrap_obs_by_seat.get(seat)
+        if bootstrap_obs is not None:
             if model is None:
                 raise ValueError("model is required to bootstrap truncated rollout")
             with torch.no_grad():
-                next_value = float(model.distribution(episode.bootstrap_obs, device=next(model.parameters()).device)[2])
+                next_value = float(model.value_from_obs(
+                    bootstrap_obs, device=next(model.parameters()).device))
         gae = compute_gae(
-            rewards, values, dones, gamma=gamma,
+            rewards, values, dones, gamma=gamma, gammas=gammas,
             gae_lambda=gae_lambda, next_value=next_value, normalize=False)
         for transition, advantage, return_ in zip(
                 transitions, gae.advantages, gae.returns):
@@ -152,6 +158,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     game_seed = seed
     env = env_factory()
     shaping_lambda = getattr(env, "_shaping_lambda", 1e-2)
+    shaping_enabled = getattr(env, "_shaping", True)
     pending: list[PPOItem] = []
     valid_episodes = failed_episodes = updates = 0
     metric_totals: dict[str, float] = {}
@@ -219,12 +226,24 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 state = {k: v.detach().cpu() for k, v in model.state_dict().items()}
                 jobs.append(pool.submit(_parallel_episode_worker, state, model.hidden_dim,
                                         current_seed, deck_p1, deck_p2, max_steps,
-                                        shaping_lambda))
+                                        shaping_lambda, shaping_enabled))
         episodes = [job.result() if hasattr(job, "result") else job for job in jobs]
         remaining = steps - count
         for episode in episodes:
             if len(episode.transitions) > remaining:
                 episode.transitions = episode.transitions[:remaining]
+                # The environment state after the original episode is no
+                # longer the state after the retained prefix. Drop terminal
+                # metadata and bootstrap observations rather than pairing
+                # samples with an inconsistent suffix.
+                episode.terminal_reason = None
+                episode.bootstrap_obs = None
+                episode.bootstrap_obs_by_seat = {}
+                episode.final_summary = None
+                episode.tail_actions = ()
+                episode.commit_diagnostics = tuple(
+                    t.commit_diagnostic for t in episode.transitions
+                    if t.commit_diagnostic is not None)
             if not episode.transitions:
                 continue
             count += len(episode.transitions)

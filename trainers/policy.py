@@ -116,8 +116,19 @@ class PolicyValueNet(nn.Module):
             raise ValueError("observation has no choices")
         device = torch.device(device) if device is not None else None
         enc = torch.tensor(obs.enc, dtype=torch.float32, device=device)
+        # Prefix context is part of the public observation but is not included
+        # in the fixed engine encoding. Fold stable prefix summaries into the
+        # final two dynamic channels so payment/target choices are path-aware
+        # without changing checkpoint tensor dimensions.
         seat = torch.tensor(float(obs.seat.value), dtype=torch.float32, device=device)
-        stage = torch.tensor(float(obs.stage_index), dtype=torch.float32, device=device)
+        prefix = tuple(obs.meta.get("choice_prefix", ()))
+        selection = tuple(obs.meta.get("selection_prefix", ()))
+        prefix_code = sum((i + 1) * sum(ord(ch) for ch in str(x))
+                          for i, x in enumerate(prefix)) % 4096
+        stage = torch.tensor(float(obs.stage_index) + len(prefix) / 100.0
+                             + prefix_code / 409600.0
+                             + sum(selection) / 6400.0,
+                             dtype=torch.float32, device=device)
         features = torch.zeros((len(obs.choices), self.feature_dim), dtype=torch.float32, device=device)
         kinds = torch.empty(len(obs.choices), dtype=torch.long, device=device)
         for i, choice in enumerate(obs.choices):
@@ -135,6 +146,14 @@ class PolicyValueNet(nn.Module):
         tensors = self.tensors_for(obs, device=device)
         logits, value = self(*tensors)
         return logits, torch.softmax(logits, dim=-1), value
+
+    def value_from_obs(self, obs: Obs, device: torch.device | str | None = None) -> Tensor:
+        """Evaluate the state value without requiring action candidates."""
+        device = torch.device(device) if device is not None else None
+        enc = torch.tensor(obs.enc, dtype=torch.float32, device=device)
+        seat = torch.tensor(float(obs.seat.value), dtype=torch.float32, device=device)
+        stage = torch.tensor(float(obs.stage_index), dtype=torch.float32, device=device)
+        return self.value_head(self._state(enc, seat, stage)).squeeze(-1)
 
     @torch.no_grad()
     def act(self, obs: Obs, deterministic: bool = False,

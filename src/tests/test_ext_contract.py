@@ -8,6 +8,7 @@ from src.dgisim.state.enums import Pid
 from dgisim_ext.modes import ForkMode, UpstreamCompatMode
 from dgisim_ext.payoff import TerminalReason, per_seat_payoff
 from dgisim_ext.potential import public_potential
+from dgisim_ext.env_api import CardEnv
 from dgisim_ext.step_guard import step_checked
 
 
@@ -61,6 +62,14 @@ class TestPotentialShaping(unittest.TestCase):
         env = CardEnv(shaping=False)
         env.reset(seed=1)
         self.assertLess(abs(public_potential(env.state, Pid.P1)), 200.0)
+
+    def test_terminal_shaping_uses_zero_terminal_potential(self):
+        env = CardEnv(shaping=True, shaping_lambda=1.0)
+        env.reset(seed=2)
+        before = env.state
+        after = before.factory().phase(env._mode.game_end_phase()).build()
+        rewards = env._with_shaping({Pid.P1: 0.0, Pid.P2: 0.0}, before, after)
+        self.assertAlmostEqual(rewards[Pid.P1], -public_potential(before, Pid.P1))
 
 
 class TestStepGuard(unittest.TestCase):

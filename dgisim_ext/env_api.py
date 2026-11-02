@@ -314,7 +314,8 @@ class CardEnv:
             # StaticTarget and similar engine dataclasses encode their contents.
             encoded = tuple(float(v) for v in payload.encoding(self._plan))
             return (encoded[0] if encoded else 0.0,
-                    encoded[1] if len(encoded) > 1 else 0.0, 0.0, 1.0)
+                    encoded[1] if len(encoded) > 1 else 0.0,
+                    encoded[2] if len(encoded) > 2 else 0.0, 1.0)
         if kind == KIND_CARD:
             (card,) = payload.ordered_cards[:1]
             return (float(self._plan.encode_item(card)), 1.0, 0.0, 2.0)
@@ -493,7 +494,7 @@ class CardEnv:
             return rewards
         return {
             pid: reward + self._shaping_lambda * (
-                self._gamma * public_potential(after, pid)
+                (0.0 if after.game_end() else self._gamma * public_potential(after, pid))
                 - public_potential(before, pid)
             )
             for pid, reward in rewards.items()

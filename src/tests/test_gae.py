@@ -22,3 +22,8 @@ class TestGAE(unittest.TestCase):
         with self.assertRaises(ValueError):
             compute_gae([float("nan")], [0.0], [True])
 
+    def test_per_step_discount_can_disable_internal_choice_discount(self):
+        result = compute_gae([0.0, 1.0], [0.0, 0.0], [False, True],
+                             gamma=0.5, gammas=[1.0, 0.5], normalize=False)
+        self.assertAlmostEqual(float(result.advantages[0]), 0.95, places=5)
+
