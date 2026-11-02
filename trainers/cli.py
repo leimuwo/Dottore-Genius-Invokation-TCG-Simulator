@@ -81,6 +81,19 @@ def main(argv=None) -> int:
         "result": result.__dict__,
     }
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2, default=str))
+    metrics_path = args.output / "train_metrics.jsonl"
+    with metrics_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"step": result.choice_steps,
+                                 "metrics": result.metrics}, default=str) + "\n")
+    events_path = args.output / "events.jsonl"
+    with events_path.open("w", encoding="utf-8") as handle:
+        for event in result.metrics.get("commit_diagnostics", []):
+            handle.write(json.dumps({"event": "commit", **event}, default=str) + "\n")
+        for reason, count in (("kill", result.metrics.get("kill_rate", 0.0)),
+                              ("engine_timeout", result.metrics.get("engine_timeout_rate", 0.0)),
+                              ("truncation", result.metrics.get("truncated_rate", 0.0))):
+            handle.write(json.dumps({"event": "episode_rate", "reason": reason,
+                                     "rate": count}, default=str) + "\n")
     save_checkpoint(args.output / "checkpoint.pt", trainer, step=result.choice_steps,
                     config=manifest)
     print(json.dumps(manifest, indent=2, default=str))

@@ -87,8 +87,8 @@ def _items_from_episode(episode: Episode, gamma: float,
                         for kind in transition.candidate_kinds]),
                     candidate_action_types=torch.tensor([
                         {"tuple": 0, "skill": 1, "card": 2, "swap": 3,
-                         "end_round": 4, "dice": 5, "cost": 6,
-                         "commit": 7}.get(kind, 0)
+                         "end_round": 4, "reroll": 5, "tuning": 6,
+                         "dice": 7, "cost": 8, "commit": 9}.get(kind, 0)
                         for kind in transition.candidate_action_types]),
                     action_index=transition.action_index,
                     old_log_prob=transition.log_prob,
@@ -127,6 +127,8 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     valid_episodes = failed_episodes = updates = 0
     metric_totals: dict[str, float] = {}
     action_counts = {"swap": 0, "skill": 0, "commit": 0}
+    commit_action_counts: dict[str, int] = {}
+    choice_counts: dict[str, int] = {}
     terminal_counts = {"kill": 0, "timeout": 0, "truncated": 0}
     episode_lengths: list[int] = []
     episode_commits: list[int] = []
@@ -204,6 +206,7 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 episode_commits.append(sum(t.action_label == "COMMIT" for t in episode.transitions))
                 for transition in episode.transitions:
                     label = transition.action_label
+                    choice_counts[label] = choice_counts.get(label, 0) + 1
                     if label == "SWAP_CHARACTER": action_counts["swap"] += 1
                     elif label == "CAST_SKILL": action_counts["skill"] += 1
                     if label == "COMMIT": action_counts["commit"] += 1
@@ -218,6 +221,9 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
                 start_gae = time.perf_counter()
                 pending.extend(_items_from_episode(episode, gamma, gae_lambda, model))
                 commit_diagnostics.extend(episode.commit_diagnostics)
+                for diagnostic in episode.commit_diagnostics:
+                    kind = diagnostic["action_type"]
+                    commit_action_counts[kind] = commit_action_counts.get(kind, 0) + 1
                 timings["gae"] += time.perf_counter() - start_gae
             else:
                 failed_episodes += 1
@@ -257,5 +263,9 @@ def train_steps(model, trainer: PPOTrainer, *, steps: int = 1000,
     # Kept in the manifest as structured diagnostics for the truncation study.
     metrics["truncated_tail_actions"] = truncated_tail_actions
     metrics["commit_diagnostics"] = commit_diagnostics
+    metrics["choice_counts"] = choice_counts
+    metrics["commit_action_counts"] = commit_action_counts
+    metrics["choice_count_total"] = sum(choice_counts.values())
+    metrics["commit_count_total"] = sum(commit_action_counts.values())
     return TrainResult(count, valid_episodes, failed_episodes, updates, metrics,
                        timings, tuple(batch_sizes))

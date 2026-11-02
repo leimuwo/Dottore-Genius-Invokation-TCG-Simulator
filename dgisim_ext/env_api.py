@@ -589,7 +589,10 @@ def _commit_diagnostic(action: PlayerAction, actor: Pid,
         "SkillAction": "skill", "CardAction": "card",
         "SwapAction": "swap", "DeathSwapAction": "swap",
         "EndRoundAction": "end_round", "ElementalTuningAction": "card",
+        "DiceSelectAction": "reroll",
     }.get(action_name, action_name)
+    if action_name == "ElementalTuningAction":
+        action_type = "tuning"
     skill = getattr(getattr(action, "skill", None), "name", None)
     skill_type = skill or getattr(getattr(action, "card", None), "__name__", None)
     before_shield = sum(c["shield"] for c in before[opponent.name])

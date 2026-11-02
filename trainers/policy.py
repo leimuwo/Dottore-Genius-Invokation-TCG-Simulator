@@ -15,7 +15,9 @@ __all__ = ["PolicyValueNet"]
 _KIND_ORDER = ("tuple", "card", "dice", "cost", "commit",
                "card_count", "dice_count", "cost_count")
 _KIND_TO_ID = {name: i for i, name in enumerate(_KIND_ORDER)}
-_ACTION_TYPES = ("tuple", "skill", "card", "swap", "end_round", "dice", "cost", "commit")
+_ACTION_TYPES = ("tuple", "skill", "card", "swap", "end_round", "reroll",
+                 "tuning", "dice", "cost", "commit")
+_ACTION_TYPE_STRIDE = len(_KIND_ORDER)
 _ACTION_TYPE_TO_ID = {name: i for i, name in enumerate(_ACTION_TYPES)}
 
 
@@ -124,7 +126,7 @@ class PolicyValueNet(nn.Module):
             features[i, :len(choice.feature)] = torch.tensor(choice.feature, dtype=torch.float32, device=device)
             # Composite embedding: semantic choice kind and coarse action family
             # are learned separately through disjoint IDs.
-            kinds[i] = self._kind_id(choice.kind) + len(_KIND_ORDER) * _ACTION_TYPE_TO_ID.get(
+            kinds[i] = self._kind_id(choice.kind) + _ACTION_TYPE_STRIDE * _ACTION_TYPE_TO_ID.get(
                 choice.action_type, 0)
         return enc, seat, stage, features, kinds
 
