@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import random
+import time
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -70,7 +71,8 @@ class EvalResult:
 
 def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
                     seeds=(0,), model_seat: Pid = Pid.P1,
-                    shaping: bool = False) -> EvalResult:
+                    shaping: bool = False, records_path: str | Path | None = None,
+                    resume: bool = True) -> EvalResult:
     decks = load_decks(deck_folder)
     if not decks:
         raise ValueError("no evaluation decks found")
@@ -81,9 +83,28 @@ def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
                "P2": {"wins": 0, "games": 0, "kills": 0,
                        "timeouts": 0, "payoff": 0.0}}
     games = 0
-    for left_name, left in decks:
+    completed_keys = set()
+    record_handle = None
+    if records_path is not None:
+        records_path = Path(records_path)
+        records_path.parent.mkdir(parents=True, exist_ok=True)
+        if resume and records_path.exists():
+            for line in records_path.read_text(encoding="utf-8").splitlines():
+                try:
+                    completed_keys.add(json.loads(line)["task_key"])
+                except (ValueError, KeyError):
+                    continue
+        record_handle = records_path.open("a", encoding="utf-8")
+    try:
+      for left_name, left in decks:
         for right_name, right in decks:
             for seed in seeds:
+                task_key = f"{left_name}:{right_name}:{seed}:{model_seat.name}"
+                if task_key in completed_keys:
+                    continue
+                started = time.perf_counter()
+                inference_seconds = env_seconds = 0.0
+                choice_count = commit_count = 0
                 env = CardEnv(shaping=shaping)
                 rng = random.Random(seed + 1000003)
                 if random_policy is None:
@@ -95,8 +116,15 @@ def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
                 obs = env.reset(left, right, seed)
                 while True:
                     policy = model_policy if obs.seat is model_seat else opponent_choice
+                    infer_start = time.perf_counter()
                     decision = policy(obs)
+                    inference_seconds += time.perf_counter() - infer_start
+                    choice_count += 1
+                    if obs.filled:
+                        commit_count += 1
+                    env_start = time.perf_counter()
                     out = env.step(decision.action_index)
+                    env_seconds += time.perf_counter() - env_start
                     if out.done:
                         break
                     obs = out.obs
@@ -119,6 +147,27 @@ def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
                     wins += 1
                     seat_row["wins"] += 1
                 seat_row["games"] += 1
+                if record_handle is not None:
+                    elapsed = time.perf_counter() - started
+                    record_handle.write(json.dumps({
+                        "task_key": task_key, "deck_p1": left_name,
+                        "deck_p2": right_name, "seed": seed,
+                        "model_seat": model_seat.name,
+                        "games": games, "wins": int(rewards[model_seat] > 0),
+                        "loss": int(rewards[model_seat] < 0),
+                        "terminal_reason": reason,
+                        "choice_count": choice_count,
+                        "commit_count": commit_count,
+                        "decision_count": getattr(obs, "decision_index", None),
+                        "elapsed_seconds": elapsed,
+                        "inference_seconds": inference_seconds,
+                        "environment_seconds": env_seconds,
+                        "choice_per_second": choice_count / max(elapsed, 1e-9),
+                    }) + "\n")
+                    record_handle.flush()
+    finally:
+      if record_handle is not None:
+        record_handle.close()
     lo, hi = wilson_interval(wins, games)
     return EvalResult(games, wins, kills, timeouts, payoff[Pid.P1], payoff[Pid.P2],
                       (lo, hi), by_seat)
