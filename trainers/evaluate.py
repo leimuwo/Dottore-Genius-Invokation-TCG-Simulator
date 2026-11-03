@@ -12,7 +12,28 @@ from src.dgisim.deck import FrozenDeck
 from src.dgisim.state.enums import Pid
 from .rollout import Decision, random_decision
 
-__all__ = ["wilson_interval", "evaluate_policy"]
+__all__ = ["wilson_interval", "load_decks", "attack_first_decision", "evaluate_policy"]
+
+
+def attack_first_decision(obs) -> Decision:
+    """Conservative attack-first baseline without swap loops.
+
+    A swap is never selected merely because it is available.  The public
+    observation does not expose the post-swap candidate tree, so accepting a
+    swap without proving that a follow-up skill is payable would make the
+    baseline manufacture long swap cycles.  Skills are selected first; when
+    none is currently legal, ending the round is the safe fallback.
+    """
+    skill_indices = [i for i, choice in enumerate(obs.choices)
+                     if choice.action_type == "skill"]
+    if skill_indices:
+        index = skill_indices[0]
+    else:
+        end_indices = [i for i, choice in enumerate(obs.choices)
+                       if choice.action_type == "end_round"]
+        index = end_indices[0] if end_indices else 0
+    count = len(obs.choices)
+    return Decision(index, -math.log(max(1, count)), 0.0, 0.0)
 
 
 def wilson_interval(successes: int, trials: int, z: float = 1.959963984540054) -> tuple[float, float]:
@@ -65,10 +86,15 @@ def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
             for seed in seeds:
                 env = CardEnv(shaping=shaping)
                 rng = random.Random(seed + 1000003)
-                random_choice = random_policy or random_decision(rng)
+                if random_policy is None:
+                    opponent_choice = random_decision(rng)
+                elif callable(random_policy):
+                    opponent_choice = random_policy
+                else:
+                    opponent_choice = random_policy
                 obs = env.reset(left, right, seed)
                 while True:
-                    policy = model_policy if obs.seat is model_seat else random_choice
+                    policy = model_policy if obs.seat is model_seat else opponent_choice
                     decision = policy(obs)
                     out = env.step(decision.action_index)
                     if out.done:
