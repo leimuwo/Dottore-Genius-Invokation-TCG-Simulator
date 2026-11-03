@@ -72,7 +72,7 @@ class EvalResult:
 def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
                     seeds=(0,), model_seat: Pid = Pid.P1,
                     shaping: bool = False, records_path: str | Path | None = None,
-                    resume: bool = True) -> EvalResult:
+                    resume: bool = True, task_namespace: str = "default") -> EvalResult:
     decks = load_decks(deck_folder)
     if not decks:
         raise ValueError("no evaluation decks found")
@@ -99,7 +99,8 @@ def evaluate_policy(model_policy, random_policy, *, deck_folder="decks/test",
       for left_name, left in decks:
         for right_name, right in decks:
             for seed in seeds:
-                task_key = f"{left_name}:{right_name}:{seed}:{model_seat.name}"
+                task_key = (f"{task_namespace}:{left_name}:{right_name}:{seed}:"
+                            f"{model_seat.name}:shaping={shaping}")
                 if task_key in completed_keys:
                     continue
                 started = time.perf_counter()
